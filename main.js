@@ -56,7 +56,7 @@ document.getElementById('connect-wallet').addEventListener('click', async () => 
       document.getElementById('dashboard').classList.remove('hidden');
       loadPools();
     } else {
-      showToast('Wander Wallet extension not detected.');
+      showToast('Arweave Wallet extension not detected.');
     }
   } catch (error) {
     showToast('Error connecting wallet: ' + error.message);
@@ -77,9 +77,19 @@ document.getElementById('disconnect-wallet').addEventListener('click', async () 
   }
 });
 
-document.getElementById('support-btn').addEventListener('click', () => {
-  const link = prompt('Enter the support link URL:');
-  if (link) window.open(link, '_blank');
+document.getElementById('support-btn').addEventListener('click', async () => {
+  try {
+    const response = await fetch(`${document.getElementById('server-url').value}/support-link`, {
+      method: 'GET',
+      headers: { 'Content-Type': 'application/json' }
+    });
+    const result = await response.json();
+    if (!response.ok) throw new Error(result.error || 'Failed to fetch support link');
+    if (result.link) window.open(result.link, '_blank');
+    else showToast('No support link configured.');
+  } catch (error) {
+    showToast('Error fetching support link: ' + error.message);
+  }
 });
 
 document.getElementById('create-pool-btn').addEventListener('click', () => {
@@ -97,7 +107,9 @@ document.getElementById('cancel-edit').addEventListener('click', () => {
   document.getElementById('whitelist-preview-edit').innerHTML = '';
 });
 
-document.getElementById('close-details').addEventListener('click', () => document.getElementById('details-modal').classList.add('hidden'));
+document.getElementById('close-details').addEventListener('click', () => {
+  document.getElementById('details-modal').classList.add('hidden');
+});
 
 document.getElementById('create-pool-form').addEventListener('submit', async (e) => {
   e.preventDefault();
@@ -123,7 +135,7 @@ document.getElementById('create-pool-form').addEventListener('submit', async (e)
   
   const poolData = {
     name: document.getElementById('pool-name').value,
-    password: poolPassword, // Include the password in the request
+    password: poolPassword,
     startTime: localToZulu(document.getElementById('start-time').value),
     endTime: localToZulu(document.getElementById('end-time').value),
     usageCap: parseFloat(document.getElementById('usage-cap').value),
@@ -139,7 +151,9 @@ document.getElementById('create-pool-form').addEventListener('submit', async (e)
       body: JSON.stringify(poolData)
     });
     const result = await response.json();
-    if (!response.ok) throw new Error(result.error || 'Failed to create pool');
+    if (!response.ok) {
+      throw new Error(`${result.error || 'Failed to create pool'} (${result.code || 'UNKNOWN_ERROR'})`);
+    }
     document.getElementById('create-modal').classList.add('hidden');
     document.getElementById('create-pool-form').reset();
     document.getElementById('whitelist-preview-create').innerHTML = '';
@@ -172,11 +186,7 @@ document.getElementById('edit-pool-form').addEventListener('submit', async (e) =
     return;
   }
   
-  const updates = {
-    password: poolPassword, // Include password for authentication
-    creatorAddress: walletAddress
-  };
-  
+  const updates = {};
   const editStartTime = document.getElementById('edit-start-time').value;
   const editEndTime = document.getElementById('edit-end-time').value;
   const editUsageCap = document.getElementById('edit-usage-cap').value;
@@ -187,16 +197,30 @@ document.getElementById('edit-pool-form').addEventListener('submit', async (e) =
   if (editUsageCap) updates.usageCap = parseFloat(editUsageCap);
   if (editWhitelist) updates.whitelist = addresses;
   
+  console.log('Edit pool request body:', updates);
+  
   try {
-    const response = await fetch(`${document.getElementById('server-url').value}/pool/${currentEditPoolId}`, {
+    const serverUrl = document.getElementById('server-url').value;
+    if (!serverUrl) {
+      showToast('Server URL is missing.');
+      return;
+    }
+    const url = new URL(`${serverUrl}/pool/${encodeURIComponent(currentEditPoolId)}/edit`);
+    url.searchParams.append('password', poolPassword);
+    url.searchParams.append('creatorAddress', walletAddress);
+    
+    const response = await fetch(url, {
       method: 'PATCH',
       headers: { 'Content-Type': 'application/json', 'X-API-Key': DEPLOY_API_KEY },
       body: JSON.stringify(updates)
     });
     const result = await response.json();
-    if (!response.ok) throw new Error(result.error || 'Failed to update pool');
+    if (!response.ok) {
+      throw new Error(`${result.error || 'Failed to update pool'} (${result.code || 'UNKNOWN_ERROR'})`);
+    }
     document.getElementById('edit-modal').classList.add('hidden');
     document.getElementById('whitelist-preview-edit').innerHTML = '';
+    document.getElementById('edit-pool-form').reset();
     loadPools();
     showToast('Pool updated successfully!', 'success');
   } catch (error) {
@@ -217,17 +241,60 @@ async function sponsorCredits(poolId) {
       showToast('Pool has ended, cannot sponsor credits.');
       return;
     }
-    const response = await fetch(`${document.getElementById('server-url').value}/share-credits`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json', 'X-API-Key': DEPLOY_API_KEY },
-      body: JSON.stringify({ eventPoolId: poolId, whitelist: pool.whitelist, creatorAddress: walletAddress })
-    });
-    const result = await response.json();
-    if (!response.ok) throw new Error(result.error || 'Failed to sponsor credits');
-    showToast(`Credits sponsored to ${result.successfulShares} of ${pool.whitelist.length} addresses!`, 'success');
+    const serverUrl = document.getElementById('server-url').value;
+    if (!serverUrl) {
+      showToast('Server URL is missing.');
+      return;
+    }
+    
+    // Prompt for password
+    const password = prompt('Enter the pool password to sponsor credits:');
+    if (!password) {
+      showToast('Password required to sponsor credits.');
+      return;
+    }
+    
+    // Show loading state
+    const sponsorButton = document.getElementById(`sponsor-btn-${poolId}`);
+    if (sponsorButton) {
+      sponsorButton.disabled = true;
+      sponsorButton.textContent = 'Sponsoring...';
+    }
+    
+    let successfulShares = 0;
+    for (const walletAddress of pool.whitelist) {
+      try {
+        const response = await fetch(`${serverUrl}/share-credits`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', 'X-API-Key': DEPLOY_API_KEY },
+          body: JSON.stringify({ eventPoolId: poolId, walletAddress })
+        });
+        const result = await response.json();
+        if (!response.ok) {
+          throw new Error(`${result.error || 'Failed to sponsor credits'} (${result.code || 'UNKNOWN_ERROR'})`);
+        }
+        successfulShares++;
+      } catch (error) {
+        console.error(`Failed to sponsor credits for ${walletAddress}:`, error.message);
+        showToast(`Failed to sponsor credits for ${walletAddress}: ${error.message}`);
+      }
+    }
+    
+    // Reset button state
+    if (sponsorButton) {
+      sponsorButton.disabled = false;
+      sponsorButton.textContent = 'Sponsor Credits';
+    }
+    
+    showToast(`Sponsored credits to ${successfulShares} of ${pool.whitelist.length} addresses!`, 'success');
     loadPools();
   } catch (error) {
     showToast('Error sponsoring credits: ' + error.message);
+    const sponsorButton = document.getElementById(`sponsor-btn-${poolId}`);
+    if (sponsorButton) {
+      sponsorButton.disabled = false;
+      sponsorButton.textContent = 'Sponsor Credits';
+    }
   }
 }
 
@@ -238,48 +305,100 @@ async function revokeCredits(poolId) {
       showToast('Pool data not found.');
       return;
     }
-    const response = await fetch(`${document.getElementById('server-url').value}/revoke-credits`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json', 'X-API-Key': DEPLOY_API_KEY },
-      body: JSON.stringify({ eventPoolId: poolId, whitelist: pool.whitelist, creatorAddress: walletAddress })
-    });
-    const result = await response.json();
-    if (!response.ok) throw new Error(result.error || 'Failed to revoke credits');
-    showToast(`Credits revoked from ${result.revokedCount} addresses!`, 'success');
+    const serverUrl = document.getElementById('server-url').value;
+    if (!serverUrl) {
+      showToast('Server URL is missing.');
+      return;
+    }
+    
+    // Prompt for password
+    const password = prompt('Enter the pool password to revoke credits:');
+    if (!password) {
+      showToast('Password required to revoke credits.');
+      return;
+    }
+    
+    // Show loading state
+    const revokeButton = document.getElementById(`revoke-btn-${poolId}`);
+    if (revokeButton) {
+      revokeButton.disabled = true;
+      revokeButton.textContent = 'Revoking...';
+    }
+    
+    let revokedCount = 0;
+    for (const walletAddress of pool.whitelist) {
+      try {
+        const url = new URL(`${serverUrl}/pool/${encodeURIComponent(poolId)}/revoke`);
+        url.searchParams.append('password', password);
+        url.searchParams.append('creatorAddress', walletAddress);
+        
+        const response = await fetch(url, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', 'X-API-Key': DEPLOY_API_KEY },
+          body: JSON.stringify({ walletAddress })
+        });
+        const result = await response.json();
+        if (!response.ok) {
+          throw new Error(`${result.error || 'Failed to revoke credits'} (${result.code || 'UNKNOWN_ERROR'})`);
+        }
+        revokedCount++;
+      } catch (error) {
+        console.error(`Failed to revoke credits for ${walletAddress}:`, error.message);
+        showToast(`Failed to revoke credits for ${walletAddress}: ${error.message}`);
+      }
+    }
+    
+    // Reset button state
+    if (revokeButton) {
+      revokeButton.disabled = false;
+      revokeButton.textContent = 'Revoke Credits';
+    }
+    
+    showToast(`Revoked credits from ${revokedCount} of ${pool.whitelist.length} addresses!`, 'success');
     loadPools();
   } catch (error) {
     showToast('Error revoking credits: ' + error.message);
+    const revokeButton = document.getElementById(`revoke-btn-${poolId}`);
+    if (revokeButton) {
+      revokeButton.disabled = false;
+      revokeButton.textContent = 'Revoke Credits';
+    }
   }
 }
 
-// Functions for modal actions
 window.revokeAccess = async () => {
-  const address = document.getElementById('revoke-address').value;
+  const walletAddressInput = document.getElementById('revoke-address').value;
   const password = document.getElementById('revoke-password').value;
   
-  if (!address || !password) {
+  if (!walletAddressInput || !password) {
     showToast('Please enter both address and password.');
     return;
   }
   
-  if (!isValidArweaveAddress(address)) {
+  if (!isValidArweaveAddress(walletAddressInput)) {
     showToast('Please enter a valid Arweave address.');
     return;
   }
   
   try {
-    const response = await fetch(`${document.getElementById('server-url').value}/revoke-access`, {
+    const serverUrl = document.getElementById('server-url').value;
+    if (!serverUrl) {
+      showToast('Server URL is missing.');
+      return;
+    }
+    const url = new URL(`${serverUrl}/pool/${encodeURIComponent(currentEditPoolId)}/revoke`);
+    url.searchParams.append('password', password);
+    url.searchParams.append('creatorAddress', walletAddress);
+    
+    const response = await fetch(url, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', 'X-API-Key': DEPLOY_API_KEY },
-      body: JSON.stringify({ 
-        eventPoolId: currentEditPoolId, 
-        address: address,
-        password: password,
-        creatorAddress: walletAddress 
-      })
+      body: JSON.stringify({ walletAddress: walletAddressInput })
     });
     const result = await response.json();
-    if (!response.ok) throw new Error(result.error || 'Failed to revoke access');
+    if (!response.ok) {
+      throw new Error(`${result.error || 'Failed to revoke access'} (${result.code || 'UNKNOWN_ERROR'})`);
+    }
     showToast('Access revoked successfully!', 'success');
     document.getElementById('revoke-address').value = '';
     document.getElementById('revoke-password').value = '';
@@ -302,18 +421,34 @@ window.shareCredits = async () => {
     return;
   }
   
+  if (!currentEditPoolId) {
+    showToast('No pool selected. Please view pool details first.');
+    return;
+  }
+  
+  const serverUrl = document.getElementById('server-url').value;
+  if (!serverUrl) {
+    showToast('Server URL is missing.');
+    return;
+  }
+  
+  const requestBody = { 
+    eventPoolId: currentEditPoolId, 
+    walletAddress: address
+  };
+  
+  console.log('Share credits request:', requestBody);
+  
   try {
-    const response = await fetch(`${document.getElementById('server-url').value}/share-credits`, {
+    const response = await fetch(`${serverUrl}/share-credits`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', 'X-API-Key': DEPLOY_API_KEY },
-      body: JSON.stringify({ 
-        eventPoolId: currentEditPoolId, 
-        whitelist: [address], 
-        creatorAddress: walletAddress 
-      })
+      body: JSON.stringify(requestBody)
     });
     const result = await response.json();
-    if (!response.ok) throw new Error(result.error || 'Failed to share credits');
+    if (!response.ok) {
+      throw new Error(`${result.error || 'Failed to share credits'} (${result.code || 'UNKNOWN_ERROR'})`);
+    }
     showToast('Credits shared successfully!', 'success');
     document.getElementById('share-address').value = '';
     loadPools();
@@ -331,30 +466,32 @@ window.downloadWallet = async () => {
   }
   
   try {
-    const response = await fetch(`${document.getElementById('server-url').value}/pool/${currentEditPoolId}/wallet`, {
-      method: 'POST',
-      headers: { 
-        'Content-Type': 'application/json',
-        'X-API-Key': DEPLOY_API_KEY 
-      },
-      body: JSON.stringify({
-        password: password,
-        creatorAddress: walletAddress
-      })
+    const serverUrl = document.getElementById('server-url').value;
+    if (!serverUrl) {
+      showToast('Server URL is missing.');
+      return;
+    }
+    const url = new URL(`${serverUrl}/pool/${encodeURIComponent(currentEditPoolId)}/wallet`);
+    url.searchParams.append('password', password);
+    url.searchParams.append('creatorAddress', walletAddress);
+    
+    const response = await fetch(url, {
+      headers: { 'X-API-Key': DEPLOY_API_KEY }
     });
     const result = await response.json();
-    if (!response.ok) throw new Error(result.error || 'Failed to download wallet');
+    if (!response.ok) {
+      throw new Error(`${result.error || 'Failed to download wallet'} (${result.code || 'UNKNOWN_ERROR'})`);
+    }
     
-    // Create and download the wallet file
     const walletBlob = new Blob([JSON.stringify(result.wallet, null, 2)], { type: 'application/json' });
-    const url = URL.createObjectURL(walletBlob);
+    const urlObj = URL.createObjectURL(walletBlob);
     const a = document.createElement('a');
-    a.href = url;
+    a.href = urlObj;
     a.download = `pool-${currentEditPoolId}-wallet.json`;
     document.body.appendChild(a);
     a.click();
     document.body.removeChild(a);
-    URL.revokeObjectURL(url);
+    URL.revokeObjectURL(urlObj);
     
     showToast('Wallet downloaded successfully!', 'success');
     document.getElementById('download-password').value = '';
@@ -373,16 +510,23 @@ window.deletePoolConfirm = async () => {
     }
     
     try {
-      const response = await fetch(`${document.getElementById('server-url').value}/pool/${currentEditPoolId}`, {
+      const serverUrl = document.getElementById('server-url').value;
+      if (!serverUrl) {
+        showToast('Server URL is missing.');
+        return;
+      }
+      const response = await fetch(`${serverUrl}/pool/${encodeURIComponent(currentEditPoolId)}`, {
         method: 'DELETE',
         headers: { 'Content-Type': 'application/json', 'X-API-Key': DEPLOY_API_KEY },
         body: JSON.stringify({ 
-          password: password,
+          password,
           creatorAddress: walletAddress 
         })
       });
       const result = await response.json();
-      if (!response.ok) throw new Error(result.error || 'Failed to delete pool');
+      if (!response.ok) {
+        throw new Error(`${result.error || 'Failed to delete pool'} (${result.code || 'UNKNOWN_ERROR'})`);
+      }
       document.getElementById('details-modal').classList.add('hidden');
       loadPools();
       showToast('Pool deleted successfully!', 'success');
@@ -403,6 +547,7 @@ window.editPool = (poolId) => {
   document.getElementById('edit-end-time').value = zuluToLocal(pool.endTime);
   document.getElementById('edit-usage-cap').value = pool.usageCap;
   document.getElementById('edit-whitelist').value = pool.whitelist.join('\n');
+  document.getElementById('edit-pool-password').value = '';
   document.getElementById('edit-modal').classList.remove('hidden');
   updateWhitelistPreview('edit-whitelist', 'whitelist-preview-edit');
 };
@@ -415,7 +560,12 @@ window.viewDetails = async (poolId) => {
   }
   currentEditPoolId = poolId;
   try {
-    const balanceResponse = await fetch(`${document.getElementById('server-url').value}/pool/${poolId}/balance?creatorAddress=${walletAddress}`, {
+    const serverUrl = document.getElementById('server-url').value;
+    if (!serverUrl) {
+      showToast('Server URL is missing.');
+      return;
+    }
+    const balanceResponse = await fetch(`${serverUrl}/pool/${encodeURIComponent(poolId)}/balance?creatorAddress=${encodeURIComponent(walletAddress)}`, {
       headers: { 'X-API-Key': DEPLOY_API_KEY }
     });
     const balanceData = balanceResponse.ok ? await balanceResponse.json() : { balance: { balance: 0 } };
@@ -424,11 +574,11 @@ window.viewDetails = async (poolId) => {
     const endTime = new Date(pool.endTime);
     const isEnded = now > endTime;
     const statusText = isEnded ? 'Ended' : 'Active';
-    const statusColor = isEnded ? 'text-red-600 bg-red-100' : 'text-green-600 bg-green-100';
+    const statusColor = isEnded ? 'text-red-600 bg-red-100' : 'text-blue-600 bg-blue-100';
     const detailsContent = `
       <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
         <div class="space-y-6">
-          <div class="pool-details-section rounded-2xl p-6">
+          <div class="pool-details-section rounded-2xl p-6 bg-white shadow">
             <h4 class="font-bold text-gray-900 mb-4 text-lg">Pool Information</h4>
             <div class="space-y-3 text-sm">
               <div class="flex justify-between py-2 border-b border-gray-200">
@@ -445,7 +595,7 @@ window.viewDetails = async (poolId) => {
               </div>
             </div>
           </div>
-          <div class="pool-details-section rounded-2xl p-6">
+          <div class="pool-details-section rounded-2xl p-6 bg-white shadow">
             <h4 class="font-bold text-gray-900 mb-4 text-lg">Time & Usage</h4>
             <div class="space-y-3 text-sm">
               <div class="flex justify-between py-2 border-b border-gray-200">
@@ -462,23 +612,23 @@ window.viewDetails = async (poolId) => {
               </div>
             </div>
           </div>
-          <div class="pool-details-section rounded-2xl p-6">
+          <div class="pool-details-section rounded-2xl p-6 bg-white shadow">
             <h4 class="font-bold text-gray-900 mb-4 text-lg">Wallet Balance</h4>
             <div class="space-y-3 text-sm">
               <div class="flex justify-between py-2">
                 <span class="text-gray-600 font-medium">Current Balance:</span>
-                <span class="font-bold text-2xl text-indigo-600">${(balance.balance || 0).toFixed(12)}</span>
+                <span class="font-bold text-2xl text-blue-600">${(balance.balance || 0).toFixed(2)}</span>
               </div>
             </div>
           </div>
-          <div class="pool-details-section rounded-2xl p-6">
+          <div class="pool-details-section rounded-2xl p-6 bg-white shadow">
             <h4 class="font-bold text-gray-900 mb-4 text-lg">Actions</h4>
-            <button onclick="sponsorCredits('${poolId}')" class="w-full bg-indigo-500 hover:bg-indigo-600 text-white py-2 rounded-lg text-sm font-semibold transition-all mb-2">Sponsor Credits to Whitelist</button>
-            <button onclick="revokeCredits('${poolId}')" class="w-full bg-red-500 hover:bg-red-600 text-white py-2 rounded-lg text-sm font-semibold transition-all mb-2">Revoke Credits from Whitelist</button>
+            <button id="sponsor-btn-${poolId}" class="w-full bg-blue-500 hover:bg-blue-600 text-white py-2 rounded-lg text-sm font-semibold transition-all mb-2">Sponsor whitelist Credits</button>
+            <button id="revoke-btn-${poolId}" class="w-full bg-red-500 hover:bg-red-600 text-white py-2 rounded-lg text-sm font-semibold transition-all">Revoke Credits</button>
           </div>
         </div>
         <div class="space-y-6">
-          <div class="pool-details-section rounded-2xl p-6">
+          <div class="pool-details-section rounded-2xl p-6 bg-white shadow">
             <h4 class="font-bold text-gray-900 mb-4 text-lg">Whitelisted Addresses (${pool.whitelist.length})</h4>
             <div class="max-h-80 overflow-y-auto space-y-2">
               ${pool.whitelist.map(address => `
@@ -492,6 +642,17 @@ window.viewDetails = async (poolId) => {
       </div>
     `;
     document.getElementById('pool-details-content').innerHTML = detailsContent;
+    
+    // Add event listeners to buttons
+    const sponsorButton = document.getElementById(`sponsor-btn-${poolId}`);
+    const revokeButton = document.getElementById(`revoke-btn-${poolId}`);
+    if (sponsorButton) {
+      sponsorButton.addEventListener('click', () => sponsorCredits(poolId));
+    }
+    if (revokeButton) {
+      revokeButton.addEventListener('click', () => revokeCredits(poolId));
+    }
+    
     document.getElementById('details-modal').classList.remove('hidden');
   } catch (error) {
     showToast('Error loading pool details: ' + error.message);
@@ -501,12 +662,17 @@ window.viewDetails = async (poolId) => {
 async function loadPools() {
   const poolsGrid = document.getElementById('pools-grid');
   try {
-    const response = await fetch(`${document.getElementById('server-url').value}/pools?creatorAddress=${walletAddress}`, {
+    const serverUrl = document.getElementById('server-url').value;
+    if (!serverUrl) {
+      showToast('Server URL is missing.');
+      return;
+    }
+    const response = await fetch(`${serverUrl}/pools?creatorAddress=${encodeURIComponent(walletAddress)}`, {
       headers: { 'X-API-Key': DEPLOY_API_KEY }
     });
     if (!response.ok) {
       const errorData = await response.json();
-      throw new Error(errorData.error || 'Failed to fetch pools');
+      throw new Error(`${errorData.error || 'Failed to fetch pools'} (${errorData.code || 'UNKNOWN_ERROR'})`);
     }
     const pools = await response.json();
     poolDataMap.clear();
@@ -515,7 +681,7 @@ async function loadPools() {
     for (const [poolId, pool] of Object.entries(pools)) {
       poolDataMap.set(poolId, pool);
       totalPools++;
-      const balanceResponse = await fetch(`${document.getElementById('server-url').value}/pool/${poolId}/balance?creatorAddress=${walletAddress}`, {
+      const balanceResponse = await fetch(`${serverUrl}/pool/${encodeURIComponent(poolId)}/balance?creatorAddress=${encodeURIComponent(walletAddress)}`, {
         headers: { 'X-API-Key': DEPLOY_API_KEY }
       });
       const balanceData = balanceResponse.ok ? await balanceResponse.json() : { balance: { balance: 0 } };
@@ -524,23 +690,23 @@ async function loadPools() {
       const endTime = new Date(pool.endTime);
       const isEnded = now > endTime;
       if (!isEnded) activePools++;
-      const statusColor = isEnded ? 'bg-red-100 text-red-600' : 'bg-green-100 text-green-600';
+      const statusColor = isEnded ? 'bg-red-100 text-red-600' : 'bg-blue-100 text-blue-600';
       const statusText = isEnded ? 'Ended' : 'Active';
       const poolCard = document.createElement('div');
-      poolCard.className = 'pool-card p-6';
+      poolCard.className = 'pool-card p-6 bg-white shadow rounded-2xl';
       poolCard.innerHTML = `
         <div class="flex justify-between items-start mb-4">
           <h3 class="text-xl font-bold text-gray-900">${pool.name}</h3>
-          <span class="px-3 py-1 rounded-full text-xs font-semibold ${statusColor}">${statusText}</span>
+          <span class="px-3 py-1 rounded-lg text-xs font-semibold ${statusColor}">${statusText}</span>
         </div>
         <div class="space-y-3 text-sm text-gray-600 mb-6">
           <div class="flex justify-between">
             <span>Balance:</span>
-            <span class="font-semibold">${(balance.balance || 0).toFixed(4)} Credits</span>
+            <span class="font-semibold">${(balance.balance || 0).toFixed(4)}</span>
           </div>
           <div class="flex justify-between">
             <span>Usage Cap:</span>
-            <span class="font-semibold">${pool.usageCap} Credits</span>
+            <span class="font-semibold">${pool.usageCap}</span>
           </div>
           <div class="flex justify-between">
             <span>Duration:</span>
@@ -548,11 +714,11 @@ async function loadPools() {
           </div>
           <div class="flex justify-between">
             <span>Addresses:</span>
-            <span class="font-semibold">${pool.whitelist.length} whitelisted</span>
+            <span class="font-semibold">${pool.whitelist.length}</span>
           </div>
         </div>
         <div class="space-y-2">
-          <button onclick="viewDetails('${poolId}')" class="w-full bg-indigo-500 hover:bg-indigo-600 text-white py-2 rounded-lg text-sm font-semibold transition-all">View Details</button>
+          <button onclick="viewDetails('${poolId}')" class="w-full bg-blue-500 hover:bg-blue-600 text-white py-2 rounded-lg text-sm font-semibold transition-all">View Details</button>
           ${!isEnded ? `<button onclick="editPool('${poolId}')" class="w-full bg-gray-500 hover:bg-gray-600 text-white py-2 rounded-lg text-sm font-semibold transition-all">Edit Pool</button>` : ''}
         </div>
       `;
@@ -561,10 +727,10 @@ async function loadPools() {
     document.getElementById('total-pools').textContent = totalPools;
     document.getElementById('active-pools').textContent = activePools;
     if (Object.keys(pools).length === 0) {
-      poolsGrid.innerHTML = '<div class="col-span-full text-center py-12 text-gray-600"><p class="text-lg">No pools found yet</p><p class="text-gray-500">Create your first pool to get started!</p></div>';
+      poolsGrid.innerHTML = '<div class="col-span-full text-center py-12 text-gray-600"><p class="text-lg font-semibold">No pools found yet</p><p class="text-gray-500">Create your first pool to get started!</p></div>';
     }
   } catch (error) {
-    poolsGrid.innerHTML = '<p class="col-span-full text-center text-red-500 py-8">Failed to load pools. Please try again.</p>';
+    poolsGrid.innerHTML = '<p class="col-span-full text-center text-red-600 py-8">Failed to load pools. Please try again.</p>';
     showToast('Error loading pools: ' + error.message);
   }
 }
