@@ -35,22 +35,11 @@ function updateWhitelistPreview(textareaId, previewId) {
   const textarea = document.getElementById(textareaId);
   const preview = document.getElementById(previewId);
   const addresses = textarea.value.split('\n').map(a => a.trim()).filter(a => a);
-  preview.innerHTML = addresses.map((address, index) => `
-    <div class="address-item ${isValidArweaveAddress(address) ? 'valid' : 'invalid'}">
+  preview.innerHTML = addresses.map((address) => `
+    <div class="p-2 bg-gray-100 rounded text-sm ${isValidArweaveAddress(address) ? 'text-green-600' : 'text-red-600'}">
       <span class="break-all">${address}</span>
-      <button type="button" class="remove-address-btn" data-index="${index}" data-textarea="${textareaId}">×</button>
     </div>
   `).join('');
-  preview.querySelectorAll('.remove-address-btn').forEach(button => {
-    button.addEventListener('click', () => {
-      const index = parseInt(button.dataset.index);
-      const textarea = document.getElementById(button.dataset.textarea);
-      const addresses = textarea.value.split('\n').map(a => a.trim()).filter(a => a);
-      addresses.splice(index, 1);
-      textarea.value = addresses.join('\n');
-      updateWhitelistPreview(textareaId, previewId);
-    });
-  });
 }
 
 document.getElementById('whitelist').addEventListener('input', () => updateWhitelistPreview('whitelist', 'whitelist-preview-create'));
@@ -59,7 +48,7 @@ document.getElementById('edit-whitelist').addEventListener('input', () => update
 document.getElementById('connect-wallet').addEventListener('click', async () => {
   try {
     if (window.arweaveWallet) {
-      await window.arweaveWallet.connect(['ACCESS_ADDRESS', 'SIGNATURE']);
+      await window.arweaveWallet.connect(['ACCESS_ADDRESS']);
       walletAddress = await window.arweaveWallet.getActiveAddress();
       document.getElementById('wallet-status').textContent = `Connected: ${walletAddress.slice(0, 8)}...${walletAddress.slice(-8)}`;
       document.getElementById('connect-wallet').classList.add('hidden');
@@ -134,12 +123,10 @@ document.getElementById('create-pool-form').addEventListener('submit', async (e)
     sponsorInfo: document.getElementById('sponsor-info').value
   };
   try {
-    const message = JSON.stringify(poolData);
-    const signature = await window.arweaveWallet.signMessage(new TextEncoder().encode(message));
     const response = await fetch(`${document.getElementById('server-url').value}/create-pool`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', 'X-API-Key': DEPLOY_API_KEY },
-      body: JSON.stringify({ ...poolData, signature, message })
+      body: JSON.stringify(poolData)
     });
     const result = await response.json();
     if (!response.ok) throw new Error(result.error || 'Failed to create pool');
@@ -177,12 +164,10 @@ document.getElementById('edit-pool-form').addEventListener('submit', async (e) =
   if (editUsageCap) updates.usageCap = parseFloat(editUsageCap);
   if (editWhitelist) updates.whitelist = addresses;
   try {
-    const message = JSON.stringify({ poolId: currentEditPoolId, updates });
-    const signature = await window.arweaveWallet.signMessage(new TextEncoder().encode(message));
     const response = await fetch(`${document.getElementById('server-url').value}/pool/${currentEditPoolId}`, {
       method: 'PATCH',
       headers: { 'Content-Type': 'application/json', 'X-API-Key': DEPLOY_API_KEY },
-      body: JSON.stringify({ ...updates, signature, message, creatorAddress: walletAddress })
+      body: JSON.stringify({ ...updates, creatorAddress: walletAddress })
     });
     const result = await response.json();
     if (!response.ok) throw new Error(result.error || 'Failed to update pool');
@@ -204,47 +189,42 @@ async function sponsorCredits(poolId) {
     }
     const endTime = new Date(pool.endTime);
     const currentTime = new Date();
-    const secondsUntilEnd = Math.floor((endTime - currentTime) / 1000);
-    if (secondsUntilEnd <= 0) {
+    if (currentTime > endTime) {
       showToast('Pool has ended, cannot sponsor credits.');
       return;
     }
-    const message = JSON.stringify({ poolId, action: 'sponsor-credits' });
-    const signature = await window.arweaveWallet.signMessage(new TextEncoder().encode(message));
     const response = await fetch(`${document.getElementById('server-url').value}/share-credits`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', 'X-API-Key': DEPLOY_API_KEY },
-      body: JSON.stringify({ eventPoolId: poolId, signature, message, creatorAddress: walletAddress })
+      body: JSON.stringify({ eventPoolId: poolId, whitelist: pool.whitelist, creatorAddress: walletAddress })
     });
     const result = await response.json();
     if (!response.ok) throw new Error(result.error || 'Failed to sponsor credits');
-    showToast('Credits sponsored successfully!', 'success');
+    showToast(`Credits sponsored to ${result.successfulShares} of ${pool.whitelist.length} addresses!`, 'success');
     loadPools();
   } catch (error) {
     showToast('Error sponsoring credits: ' + error.message);
   }
 }
 
-async function revokeAccess(poolId, address) {
+async function revokeCredits(poolId) {
   try {
     const pool = poolDataMap.get(poolId);
     if (!pool) {
       showToast('Pool data not found.');
       return;
     }
-    const message = JSON.stringify({ poolId, address, action: 'revoke-access' });
-    const signature = await window.arweaveWallet.signMessage(new TextEncoder().encode(message));
-    const response = await fetch(`${document.getElementById('server-url').value}/revoke-access`, {
+    const response = await fetch(`${document.getElementById('server-url').value}/revoke-credits`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', 'X-API-Key': DEPLOY_API_KEY },
-      body: JSON.stringify({ poolId, address, signature, message, creatorAddress: walletAddress })
+      body: JSON.stringify({ eventPoolId: poolId, whitelist: pool.whitelist, creatorAddress: walletAddress })
     });
     const result = await response.json();
-    if (!response.ok) throw new Error(result.error || 'Failed to revoke access');
-    showToast('Access revoked successfully!', 'success');
+    if (!response.ok) throw new Error(result.error || 'Failed to revoke credits');
+    showToast(`Credits revoked from ${result.revokedCount} addresses!`, 'success');
     loadPools();
   } catch (error) {
-    showToast('Error revoking access: ' + error.message);
+    showToast('Error revoking credits: ' + error.message);
   }
 }
 
@@ -252,12 +232,10 @@ window.deletePoolConfirm = async () => {
   const confirmDelete = confirm('Are you sure you want to delete this pool? This action cannot be undone.');
   if (confirmDelete) {
     try {
-      const message = JSON.stringify({ poolId: currentEditPoolId, action: 'delete-pool' });
-      const signature = await window.arweaveWallet.signMessage(new TextEncoder().encode(message));
       const response = await fetch(`${document.getElementById('server-url').value}/pool/${currentEditPoolId}`, {
         method: 'DELETE',
         headers: { 'Content-Type': 'application/json', 'X-API-Key': DEPLOY_API_KEY },
-        body: JSON.stringify({ signature, message, creatorAddress: walletAddress })
+        body: JSON.stringify({ creatorAddress: walletAddress })
       });
       const result = await response.json();
       if (!response.ok) throw new Error(result.error || 'Failed to delete pool');
@@ -298,14 +276,11 @@ window.viewDetails = async (poolId) => {
     });
     const balanceData = balanceResponse.ok ? await balanceResponse.json() : { balance: { balance: 0 } };
     const balance = balanceData.balance || { balance: 0 };
-    const usage = pool.usage || {};
     const now = new Date();
     const endTime = new Date(pool.endTime);
     const isEnded = now > endTime;
     const statusText = isEnded ? 'Ended' : 'Active';
     const statusColor = isEnded ? 'text-red-600 bg-red-100' : 'text-green-600 bg-green-100';
-    const usageEntries = Object.entries(usage);
-    const totalUsage = usageEntries.reduce((sum, [, usageAmount]) => sum + Number(usageAmount || 0), 0);
     const detailsContent = `
       <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
         <div class="space-y-6">
@@ -341,14 +316,6 @@ window.viewDetails = async (poolId) => {
                 <span class="text-gray-600 font-medium">Usage Cap:</span>
                 <span class="font-semibold">${pool.usageCap} Credits</span>
               </div>
-              <div class="flex justify-between py-2 border-b border-gray-200">
-                <span class="text-gray-600 font-medium">Total Usage:</span>
-                <span class="font-semibold">${totalUsage.toFixed(12)}</span>
-              </div>
-              <div class="flex justify-between py-2">
-                <span class="text-gray-600 font-medium">Remaining:</span>
-                <span class="font-semibold text-green-600">${(pool.usageCap - totalUsage).toFixed(12)} Credits</span>
-              </div>
             </div>
           </div>
           <div class="pool-details-section rounded-2xl p-6">
@@ -362,7 +329,8 @@ window.viewDetails = async (poolId) => {
           </div>
           <div class="pool-details-section rounded-2xl p-6">
             <h4 class="font-bold text-gray-900 mb-4 text-lg">Actions</h4>
-            <button onclick="sponsorCredits('${poolId}')" class="w-full bg-indigo-500 hover:bg-indigo-600 text-white py-2 rounded-lg text-sm font-semibold transition-all mb-2">Sponsor Credits</button>
+            <button onclick="sponsorCredits('${poolId}')" class="w-full bg-indigo-500 hover:bg-indigo-600 text-white py-2 rounded-lg text-sm font-semibold transition-all mb-2">Sponsor Credits to Whitelist</button>
+            <button onclick="revokeCredits('${poolId}')" class="w-full bg-red-500 hover:bg-red-600 text-white py-2 rounded-lg text-sm font-semibold transition-all mb-2">Revoke Credits from Whitelist</button>
             <button onclick="downloadWallet('${poolId}')" class="w-full bg-gray-500 hover:bg-gray-600 text-white py-2 rounded-lg text-sm font-semibold transition-all">Download Wallet</button>
           </div>
         </div>
@@ -371,26 +339,12 @@ window.viewDetails = async (poolId) => {
             <h4 class="font-bold text-gray-900 mb-4 text-lg">Whitelisted Addresses (${pool.whitelist.length})</h4>
             <div class="max-h-80 overflow-y-auto space-y-2">
               ${pool.whitelist.map(address => `
-                <div class="flex justify-between items-center p-3 bg-gray-50 rounded-lg border border-gray-200">
-                  <span class="text-xs font-mono text-gray-700 break-all flex-1 mr-4">${address}</span>
-                  <button onclick="revokeAccess('${poolId}', '${address}')" class="text-xs bg-red-500 hover:bg-red-600 text-white py-1 px-2 rounded-lg">Revoke</button>
+                <div class="p-3 bg-gray-50 rounded-lg border border-gray-200">
+                  <span class="text-xs font-mono text-gray-700 break-all">${address}</span>
                 </div>
               `).join('')}
             </div>
           </div>
-          ${usageEntries.length > 0 ? `
-            <div class="pool-details-section rounded-2xl p-6">
-              <h4 class="font-bold text-gray-900 mb-4 text-lg">Usage by Address (${usageEntries.length})</h4>
-              <div class="max-h-80 overflow-y-auto space-y-2">
-                ${usageEntries.map(([address, usageAmount]) => `
-                  <div class="flex justify-between items-center p-3 bg-gray-50 rounded-lg border border-gray-200">
-                    <span class="text-xs font-mono text-gray-700 break-all flex-1 mr-4">${address}</span>
-                    <span class="text-sm font-semibold text-indigo-600">${Number(usageAmount || 0).toFixed(12)} Credits</span>
-                  </div>
-                `).join('')}
-              </div>
-            </div>
-          ` : ''}
         </div>
       </div>
     `;
@@ -403,22 +357,26 @@ window.viewDetails = async (poolId) => {
 
 async function downloadWallet(poolId) {
   try {
-    const message = JSON.stringify({ poolId, action: 'download-wallet' });
-    const signature = await window.arweaveWallet.signMessage(new TextEncoder().encode(message));
+    const password = prompt('Enter a password to encrypt the wallet file:');
+    if (!password) {
+      showToast('Password is required to encrypt the wallet.');
+      return;
+    }
     const response = await fetch(`${document.getElementById('server-url').value}/pool/${poolId}/wallet`, {
       method: 'GET',
-      headers: { 'X-API-Key': DEPLOY_API_KEY, 'X-Signature': signature, 'X-Message': message }
+      headers: { 'X-API-Key': DEPLOY_API_KEY, 'X-Creator-Address': walletAddress }
     });
     const result = await response.json();
     if (!response.ok) throw new Error(result.error || 'Failed to download wallet');
-    const walletBlob = new Blob([JSON.stringify(result.wallet, null, 2)], { type: 'application/json' });
+    const encryptedWallet = CryptoJS.AES.encrypt(JSON.stringify(result.wallet, null, 2), password).toString();
+    const walletBlob = new Blob([encryptedWallet], { type: 'text/plain' });
     const url = URL.createObjectURL(walletBlob);
     const a = document.createElement('a');
     a.href = url;
-    a.download = `${poolId}.json`;
+    a.download = `${poolId}.json.enc`;
     a.click();
     URL.revokeObjectURL(url);
-    showToast('Wallet downloaded successfully!', 'success');
+    showToast('Wallet downloaded successfully! Use the password to decrypt.', 'success');
   } catch (error) {
     showToast('Error downloading wallet: ' + error.message);
   }
@@ -446,15 +404,12 @@ async function loadPools() {
       });
       const balanceData = balanceResponse.ok ? await balanceResponse.json() : { balance: { balance: 0 } };
       const balance = balanceData.balance || { balance: 0 };
-      const usageData = { usage: pool.usage || {} };
       const now = new Date();
       const endTime = new Date(pool.endTime);
       const isEnded = now > endTime;
       if (!isEnded) activePools++;
       const statusColor = isEnded ? 'bg-red-100 text-red-600' : 'bg-green-100 text-green-600';
       const statusText = isEnded ? 'Ended' : 'Active';
-      const usageEntries = Object.entries(usageData.usage);
-      const totalUsage = usageEntries.reduce((sum, [, usage]) => sum + Number(usage || 0), 0);
       const poolCard = document.createElement('div');
       poolCard.className = 'pool-card p-6';
       poolCard.innerHTML = `
@@ -468,8 +423,8 @@ async function loadPools() {
             <span class="font-semibold">${(balance.balance || 0).toFixed(4)} Credits</span>
           </div>
           <div class="flex justify-between">
-            <span>Usage:</span>
-            <span class="font-semibold">${totalUsage.toFixed(4)} / ${pool.usageCap}</span>
+            <span>Usage Cap:</span>
+            <span class="font-semibold">${pool.usageCap} Credits</span>
           </div>
           <div class="flex justify-between">
             <span>Duration:</span>

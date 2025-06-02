@@ -6,6 +6,7 @@
   <title>Nitya Pool Manager</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="https://unpkg.com/arweave/bundles/web.bundle.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/crypto-js.min.js"></script>
   <link href="https://fonts.googleapis.com/css2?family=Raleway:wght@400;500;600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="styles.css"></link>
 </head>
@@ -26,12 +27,6 @@
         <h1 class="text-xl font-bold">Nityaprotocol</h1>
       </div>
       <div class="mt-8 pt-6 border-t border-gray-900 border-opacity-20">
-        <a href="/join.html" class="flex items-center px-4 py-3 rounded-lg text-gray-900 bg-white bg-opacity-20 hover:bg-opacity-30 transition-all duration-300 text-sm font-medium">
-          <svg class="w-4 h-4 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
-          </svg>
-          Join Pool
-        </a>
         <a href="https://prices.ardrive.io/" target="_blank" class="flex items-center px-4 py-3 rounded-lg text-gray-900 bg-white bg-opacity-20 hover:bg-opacity-30 transition-all duration-300 text-sm font-medium">
           <svg class="w-4 h-4 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 7h6m0 10v-3m-3 3h.01M9 17h.01M9 14h.01M12 14h.01M15 11h.01M12 11h.01M9 11h.01M7 21h10a2 2 0 002-2V5a2 2 0 00-2-2H7a2 2 0 00-2 2v14a2 2 0 002 2z"></path>
@@ -147,8 +142,7 @@
       </div>
     </div>
   </div>
- 
+
   <script type="module" src="main.js"></script>
-  
 </body>
 </html>
