@@ -101,6 +101,13 @@ document.getElementById('close-details').addEventListener('click', () => documen
 
 document.getElementById('create-pool-form').addEventListener('submit', async (e) => {
   e.preventDefault();
+  
+  const poolPassword = document.getElementById('pool-password').value;
+  if (!poolPassword) {
+    showToast('Pool password is required.');
+    return;
+  }
+  
   const addresses = document.getElementById('whitelist').value.split('\n').map(a => a.trim()).filter(a => a);
   const invalidAddresses = addresses.filter(a => !isValidArweaveAddress(a));
   if (invalidAddresses.length > 0) {
@@ -113,8 +120,10 @@ document.getElementById('create-pool-form').addEventListener('submit', async (e)
     showToast('Start time must be before end time.');
     return;
   }
+  
   const poolData = {
     name: document.getElementById('pool-name').value,
+    password: poolPassword, // Include the password in the request
     startTime: localToZulu(document.getElementById('start-time').value),
     endTime: localToZulu(document.getElementById('end-time').value),
     usageCap: parseFloat(document.getElementById('usage-cap').value),
@@ -122,6 +131,7 @@ document.getElementById('create-pool-form').addEventListener('submit', async (e)
     creatorAddress: walletAddress,
     sponsorInfo: document.getElementById('sponsor-info').value
   };
+  
   try {
     const response = await fetch(`${document.getElementById('server-url').value}/create-pool`, {
       method: 'POST',
@@ -142,6 +152,13 @@ document.getElementById('create-pool-form').addEventListener('submit', async (e)
 
 document.getElementById('edit-pool-form').addEventListener('submit', async (e) => {
   e.preventDefault();
+  
+  const poolPassword = document.getElementById('edit-pool-password').value;
+  if (!poolPassword) {
+    showToast('Pool password is required to edit.');
+    return;
+  }
+  
   const addresses = document.getElementById('edit-whitelist').value.split('\n').map(a => a.trim()).filter(a => a);
   const invalidAddresses = addresses.filter(a => !isValidArweaveAddress(a));
   if (invalidAddresses.length > 0) {
@@ -154,20 +171,27 @@ document.getElementById('edit-pool-form').addEventListener('submit', async (e) =
     showToast('Start time must be before end time.');
     return;
   }
-  const updates = {};
+  
+  const updates = {
+    password: poolPassword, // Include password for authentication
+    creatorAddress: walletAddress
+  };
+  
   const editStartTime = document.getElementById('edit-start-time').value;
   const editEndTime = document.getElementById('edit-end-time').value;
   const editUsageCap = document.getElementById('edit-usage-cap').value;
   const editWhitelist = document.getElementById('edit-whitelist').value;
+  
   if (editStartTime) updates.startTime = localToZulu(editStartTime);
   if (editEndTime) updates.endTime = localToZulu(editEndTime);
   if (editUsageCap) updates.usageCap = parseFloat(editUsageCap);
   if (editWhitelist) updates.whitelist = addresses;
+  
   try {
     const response = await fetch(`${document.getElementById('server-url').value}/pool/${currentEditPoolId}`, {
       method: 'PATCH',
       headers: { 'Content-Type': 'application/json', 'X-API-Key': DEPLOY_API_KEY },
-      body: JSON.stringify({ ...updates, creatorAddress: walletAddress })
+      body: JSON.stringify(updates)
     });
     const result = await response.json();
     if (!response.ok) throw new Error(result.error || 'Failed to update pool');
@@ -228,14 +252,134 @@ async function revokeCredits(poolId) {
   }
 }
 
+// Functions for modal actions
+window.revokeAccess = async () => {
+  const address = document.getElementById('revoke-address').value;
+  const password = document.getElementById('revoke-password').value;
+  
+  if (!address || !password) {
+    showToast('Please enter both address and password.');
+    return;
+  }
+  
+  if (!isValidArweaveAddress(address)) {
+    showToast('Please enter a valid Arweave address.');
+    return;
+  }
+  
+  try {
+    const response = await fetch(`${document.getElementById('server-url').value}/revoke-access`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'X-API-Key': DEPLOY_API_KEY },
+      body: JSON.stringify({ 
+        eventPoolId: currentEditPoolId, 
+        address: address,
+        password: password,
+        creatorAddress: walletAddress 
+      })
+    });
+    const result = await response.json();
+    if (!response.ok) throw new Error(result.error || 'Failed to revoke access');
+    showToast('Access revoked successfully!', 'success');
+    document.getElementById('revoke-address').value = '';
+    document.getElementById('revoke-password').value = '';
+    loadPools();
+  } catch (error) {
+    showToast('Error revoking access: ' + error.message);
+  }
+};
+
+window.shareCredits = async () => {
+  const address = document.getElementById('share-address').value;
+  
+  if (!address) {
+    showToast('Please enter an address.');
+    return;
+  }
+  
+  if (!isValidArweaveAddress(address)) {
+    showToast('Please enter a valid Arweave address.');
+    return;
+  }
+  
+  try {
+    const response = await fetch(`${document.getElementById('server-url').value}/share-credits`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'X-API-Key': DEPLOY_API_KEY },
+      body: JSON.stringify({ 
+        eventPoolId: currentEditPoolId, 
+        whitelist: [address], 
+        creatorAddress: walletAddress 
+      })
+    });
+    const result = await response.json();
+    if (!response.ok) throw new Error(result.error || 'Failed to share credits');
+    showToast('Credits shared successfully!', 'success');
+    document.getElementById('share-address').value = '';
+    loadPools();
+  } catch (error) {
+    showToast('Error sharing credits: ' + error.message);
+  }
+};
+
+window.downloadWallet = async () => {
+  const password = document.getElementById('download-password').value;
+  
+  if (!password) {
+    showToast('Please enter the pool password.');
+    return;
+  }
+  
+  try {
+    const response = await fetch(`${document.getElementById('server-url').value}/pool/${currentEditPoolId}/wallet`, {
+      method: 'POST',
+      headers: { 
+        'Content-Type': 'application/json',
+        'X-API-Key': DEPLOY_API_KEY 
+      },
+      body: JSON.stringify({
+        password: password,
+        creatorAddress: walletAddress
+      })
+    });
+    const result = await response.json();
+    if (!response.ok) throw new Error(result.error || 'Failed to download wallet');
+    
+    // Create and download the wallet file
+    const walletBlob = new Blob([JSON.stringify(result.wallet, null, 2)], { type: 'application/json' });
+    const url = URL.createObjectURL(walletBlob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `pool-${currentEditPoolId}-wallet.json`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+    
+    showToast('Wallet downloaded successfully!', 'success');
+    document.getElementById('download-password').value = '';
+  } catch (error) {
+    showToast('Error downloading wallet: ' + error.message);
+  }
+};
+
 window.deletePoolConfirm = async () => {
   const confirmDelete = confirm('Are you sure you want to delete this pool? This action cannot be undone.');
   if (confirmDelete) {
+    const password = prompt('Enter the pool password to confirm deletion:');
+    if (!password) {
+      showToast('Password required to delete pool.');
+      return;
+    }
+    
     try {
       const response = await fetch(`${document.getElementById('server-url').value}/pool/${currentEditPoolId}`, {
         method: 'DELETE',
         headers: { 'Content-Type': 'application/json', 'X-API-Key': DEPLOY_API_KEY },
-        body: JSON.stringify({ creatorAddress: walletAddress })
+        body: JSON.stringify({ 
+          password: password,
+          creatorAddress: walletAddress 
+        })
       });
       const result = await response.json();
       if (!response.ok) throw new Error(result.error || 'Failed to delete pool');
@@ -331,7 +475,6 @@ window.viewDetails = async (poolId) => {
             <h4 class="font-bold text-gray-900 mb-4 text-lg">Actions</h4>
             <button onclick="sponsorCredits('${poolId}')" class="w-full bg-indigo-500 hover:bg-indigo-600 text-white py-2 rounded-lg text-sm font-semibold transition-all mb-2">Sponsor Credits to Whitelist</button>
             <button onclick="revokeCredits('${poolId}')" class="w-full bg-red-500 hover:bg-red-600 text-white py-2 rounded-lg text-sm font-semibold transition-all mb-2">Revoke Credits from Whitelist</button>
-            <button onclick="downloadWallet('${poolId}')" class="w-full bg-gray-500 hover:bg-gray-600 text-white py-2 rounded-lg text-sm font-semibold transition-all">Download Wallet</button>
           </div>
         </div>
         <div class="space-y-6">
@@ -354,33 +497,6 @@ window.viewDetails = async (poolId) => {
     showToast('Error loading pool details: ' + error.message);
   }
 };
-
-async function downloadWallet(poolId) {
-  try {
-    const password = prompt('Enter a password to encrypt the wallet file:');
-    if (!password) {
-      showToast('Password is required to encrypt the wallet.');
-      return;
-    }
-    const response = await fetch(`${document.getElementById('server-url').value}/pool/${poolId}/wallet`, {
-      method: 'GET',
-      headers: { 'X-API-Key': DEPLOY_API_KEY, 'X-Creator-Address': walletAddress }
-    });
-    const result = await response.json();
-    if (!response.ok) throw new Error(result.error || 'Failed to download wallet');
-    const encryptedWallet = CryptoJS.AES.encrypt(JSON.stringify(result.wallet, null, 2), password).toString();
-    const walletBlob = new Blob([encryptedWallet], { type: 'text/plain' });
-    const url = URL.createObjectURL(walletBlob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = `${poolId}.json.enc`;
-    a.click();
-    URL.revokeObjectURL(url);
-    showToast('Wallet downloaded successfully! Use the password to decrypt.', 'success');
-  } catch (error) {
-    showToast('Error downloading wallet: ' + error.message);
-  }
-}
 
 async function loadPools() {
   const poolsGrid = document.getElementById('pools-grid');

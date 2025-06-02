@@ -5,10 +5,9 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Nitya Pool Manager</title>
   <script src="https://cdn.tailwindcss.com"></script>
-  <script src="https://unpkg.com/arweave/bundles/web.bundle.min.js"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/crypto-js.min.js"></script>
+  <script src="https://unpkg.com/arweave-wallet-connector@1.0.2/dist/index.umd.js"></script>
   <link href="https://fonts.googleapis.com/css2?family=Raleway:wght@400;500;600;700&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="styles.css"></link>
+  <link rel="stylesheet" href="styles.css">
 </head>
 <body class="font-sans">
   <!-- Geometric Decorations -->
@@ -81,6 +80,7 @@
       <form id="create-pool-form" class="space-y-4">
         <input type="hidden" id="server-url" value="http://localhost:3000">
         <input type="text" id="pool-name" placeholder="Pool Name" class="w-full input-field rounded-xl p-3" required>
+        <input type="password" id="pool-password" placeholder="Pool Password" class="w-full input-field rounded-xl p-3" required>
         <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <input type="datetime-local" id="start-time" class="input-field rounded-xl p-3" required>
           <input type="datetime-local" id="end-time" class="input-field rounded-xl p-3" required>
@@ -88,8 +88,9 @@
         <input type="number" id="usage-cap" step="0.000000000001" min="0" placeholder="Usage Cap (Credits)" class="w-full input-field rounded-xl p-3" required>
         <div>
           <label for="whitelist" class="block text-sm font-medium text-gray-700 mb-2">Whitelisted Addresses (one per line, 43-character Arweave addresses)</label>
-          <textarea id="whitelist" rows="4" placeholder="Enter one Arweave address per line" class="w-full input-field rounded-xl p-3 whitelist-textarea" required></textarea>
-          <p class="text-xs text-gray-500 mt-1">Enter valid 43-character Arweave wallet addresses. Each address will be validated.</p>
+          <textarea id="whitelist" rows="4" placeholder="Enter one Arweave address per line" class="w-full input-field rounded-xl p-3 whitelist-textarea"></textarea>
+          <input type="file" id="whitelist-file" accept=".json" class="mt-2">
+          <p class="text-xs text-gray-500 mt-1">Enter addresses manually or upload a JSON file with an array of addresses.</p>
           <div id="whitelist-preview-create" class="address-preview mt-3"></div>
         </div>
         <div>
@@ -109,6 +110,8 @@
     <div class="modal-content rounded-3xl p-8 max-w-lg w-full">
       <h3 class="text-2xl font-bold mb-6 text-gray-900">Edit Pool</h3>
       <form id="edit-pool-form" class="space-y-4">
+        <input type="hidden" id="edit-pool-id">
+        <input type="password" id="edit-pool-password" placeholder="Pool Password" class="w-full input-field rounded-xl p-3" required>
         <div class="grid grid-cols-2 gap-4">
           <input type="datetime-local" id="edit-start-time" class="input-field rounded-xl p-3">
           <input type="datetime-local" id="edit-end-time" class="input-field rounded-xl p-3">
@@ -117,7 +120,8 @@
         <div>
           <label for="edit-whitelist" class="block text-sm font-medium text-gray-700 mb-2">Whitelisted Addresses (one per line, 43-character Arweave addresses)</label>
           <textarea id="edit-whitelist" rows="4" placeholder="Enter one Arweave address per line" class="w-full input-field rounded-xl p-3 whitelist-textarea"></textarea>
-          <p class="text-xs text-gray-500 mt-1">Enter valid 43-character Arweave wallet addresses. Each address will be validated.</p>
+          <input type="file" id="edit-whitelist-file" accept=".json" class="mt-2">
+          <p class="text-xs text-gray-500 mt-1">Enter addresses manually or upload a JSON file with an array of addresses.</p>
           <div id="whitelist-preview-edit" class="address-preview mt-3"></div>
         </div>
         <div class="flex space-x-3">
@@ -136,6 +140,22 @@
         <button id="close-details" class="text-gray-600 hover:text-gray-800 text-2xl font-bold w-8 h-8 flex items-center justify-center rounded-full hover:bg-gray-200 transition-all">×</button>
       </div>
       <div id="pool-details-content" class="space-y-6"></div>
+      <div class="pool-details-section rounded-2xl p-6 mt-6">
+        <h4 class="font-bold text-gray-900 mb-4 text-lg">Revoke Access</h4>
+        <input type="text" id="revoke-address" placeholder="Enter wallet address to revoke" class="w-full input-field rounded-xl p-3 mb-4">
+        <input type="password" id="revoke-password" placeholder="Pool Password" class="w-full input-field rounded-xl p-3 mb-4">
+        <button onclick="revokeAccess()" class="w-full bg-yellow-500 hover:bg-yellow-600 text-white py-2 rounded-lg text-sm font-semibold transition-all">Revoke Access</button>
+      </div>
+      <div class="pool-details-section rounded-2xl p-6 mt-6">
+        <h4 class="font-bold text-gray-900 mb-4 text-lg">Share Credits</h4>
+        <input type="text" id="share-address" placeholder="Enter wallet address to share credits" class="w-full input-field rounded-xl p-3 mb-4">
+        <button onclick="shareCredits()" class="w-full btn-primary py-2 rounded-lg text-sm font-semibold transition-all">Share Credits</button>
+      </div>
+      <div class="pool-details-section rounded-2xl p-6 mt-6">
+        <h4 class="font-bold text-gray-900 mb-4 text-lg">Download Wallet</h4>
+        <input type="password" id="download-password" placeholder="Pool Password" class="w-full input-field rounded-xl p-3 mb-4">
+        <button onclick="downloadWallet()" class="w-full btn-primary py-2 rounded-lg text-sm font-semibold transition-all">Download Wallet</button>
+      </div>
       <div class="pool-details-section rounded-2xl p-6 mt-6">
         <h4 class="font-bold text-gray-900 mb-4 text-lg">Delete Pool</h4>
         <button onclick="deletePoolConfirm()" class="w-full bg-red-500 hover:bg-red-600 text-white py-2 rounded-lg text-sm font-semibold transition-all">Delete Pool</button>
