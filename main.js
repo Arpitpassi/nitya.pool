@@ -1,11 +1,8 @@
 const DEPLOY_API_KEY = 'deploy-api-key-123';
-let arweave = window.Arweave.init({ host: 'arweave.net', port: 443, protocol: 'https' });
 let walletAddress = null;
 let currentEditPoolId = null;
 let poolDataMap = new Map();
-let turbo;
 
-// Toast Notification
 function showToast(message, type = 'error') {
   const toast = document.createElement('div');
   toast.className = `toast ${type} show`;
@@ -17,36 +14,33 @@ function showToast(message, type = 'error') {
   }, 3000);
 }
 
-// Time Management
 function localToZulu(localDateTime) {
   return new Date(localDateTime).toISOString();
 }
+
 function zuluToLocal(zuluString) {
   const date = new Date(zuluString);
   return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}T${String(date.getHours()).padStart(2, '0')}:${String(date.getMinutes()).padStart(2, '0')}`;
 }
+
 function formatDisplayTime(zuluString) {
   return new Date(zuluString).toLocaleString();
 }
 
-// Validate Arweave Address
 function isValidArweaveAddress(address) {
   return /^[a-zA-Z0-9_-]{43}$/.test(address.trim());
 }
 
-// Update Whitelist Preview
 function updateWhitelistPreview(textareaId, previewId) {
   const textarea = document.getElementById(textareaId);
   const preview = document.getElementById(previewId);
   const addresses = textarea.value.split('\n').map(a => a.trim()).filter(a => a);
-
   preview.innerHTML = addresses.map((address, index) => `
     <div class="address-item ${isValidArweaveAddress(address) ? 'valid' : 'invalid'}">
       <span class="break-all">${address}</span>
       <button type="button" class="remove-address-btn" data-index="${index}" data-textarea="${textareaId}">×</button>
     </div>
   `).join('');
-
   preview.querySelectorAll('.remove-address-btn').forEach(button => {
     button.addEventListener('click', () => {
       const index = parseInt(button.dataset.index);
@@ -59,30 +53,21 @@ function updateWhitelistPreview(textareaId, previewId) {
   });
 }
 
-// Initialize Turbo Client
-async function initializeTurbo() {
-  try {
-    const signer = new window.Turbo.ArweaveSigner(window.arweaveWallet);
-    turbo = window.Turbo.TurboFactory.authenticated({ signer });
-    walletAddress = await window.arweaveWallet.getActiveAddress();
-    document.getElementById('wallet-status').textContent = `Connected: ${walletAddress.slice(0, 8)}...${walletAddress.slice(-8)}`;
-    document.getElementById('connect-wallet').classList.add('hidden');
-    document.getElementById('disconnect-wallet').classList.remove('hidden');
-    document.getElementById('dashboard').classList.remove('hidden');
-    loadPools();
-  } catch (error) {
-    showToast('Failed to initialize Turbo client: ' + error.message);
-  }
-}
+document.getElementById('whitelist').addEventListener('input', () => updateWhitelistPreview('whitelist', 'whitelist-preview-create'));
+document.getElementById('edit-whitelist').addEventListener('input', () => updateWhitelistPreview('edit-whitelist', 'whitelist-preview-edit'));
 
-// Wallet Connection
 document.getElementById('connect-wallet').addEventListener('click', async () => {
   try {
     if (window.arweaveWallet) {
       await window.arweaveWallet.connect(['ACCESS_ADDRESS', 'SIGNATURE']);
-      await initializeTurbo();
+      walletAddress = await window.arweaveWallet.getActiveAddress();
+      document.getElementById('wallet-status').textContent = `Connected: ${walletAddress.slice(0, 8)}...${walletAddress.slice(-8)}`;
+      document.getElementById('connect-wallet').classList.add('hidden');
+      document.getElementById('disconnect-wallet').classList.remove('hidden');
+      document.getElementById('dashboard').classList.remove('hidden');
+      loadPools();
     } else {
-      showToast('Arweave wallet extension not detected.');
+      showToast('Wander Wallet extension not detected.');
     }
   } catch (error) {
     showToast('Error connecting wallet: ' + error.message);
@@ -103,24 +88,28 @@ document.getElementById('disconnect-wallet').addEventListener('click', async () 
   }
 });
 
-// Modal Controls
+document.getElementById('support-btn').addEventListener('click', () => {
+  const link = prompt('Enter the support link URL:');
+  if (link) window.open(link, '_blank');
+});
+
 document.getElementById('create-pool-btn').addEventListener('click', () => {
   document.getElementById('create-modal').classList.remove('hidden');
   updateWhitelistPreview('whitelist', 'whitelist-preview-create');
 });
+
 document.getElementById('cancel-create').addEventListener('click', () => {
   document.getElementById('create-modal').classList.add('hidden');
   document.getElementById('whitelist-preview-create').innerHTML = '';
 });
+
 document.getElementById('cancel-edit').addEventListener('click', () => {
   document.getElementById('edit-modal').classList.add('hidden');
   document.getElementById('whitelist-preview-edit').innerHTML = '';
 });
-document.getElementById('close-details').addEventListener('click', () => {
-  document.getElementById('details-modal').classList.add('hidden');
-});
 
-// Create Pool
+document.getElementById('close-details').addEventListener('click', () => document.getElementById('details-modal').classList.add('hidden'));
+
 document.getElementById('create-pool-form').addEventListener('submit', async (e) => {
   e.preventDefault();
   const addresses = document.getElementById('whitelist').value.split('\n').map(a => a.trim()).filter(a => a);
@@ -144,25 +133,16 @@ document.getElementById('create-pool-form').addEventListener('submit', async (e)
     creatorAddress: walletAddress,
     sponsorInfo: document.getElementById('sponsor-info').value
   };
-
   try {
-    const response = await fetch(`${document.getElementById('server-url').value}/pools`, {
+    const message = JSON.stringify(poolData);
+    const signature = await window.arweaveWallet.signMessage(new TextEncoder().encode(message));
+    const response = await fetch(`${document.getElementById('server-url').value}/create-pool`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', 'X-API-Key': DEPLOY_API_KEY },
-      body: JSON.stringify(poolData)
+      body: JSON.stringify({ ...poolData, signature, message })
     });
     const result = await response.json();
     if (!response.ok) throw new Error(result.error || 'Failed to create pool');
-
-    // Share credits with whitelisted addresses
-    for (const address of addresses) {
-      await turbo.shareCredits({
-        approvedAddress: address,
-        approvedWincAmount: BigInt(Math.round(poolData.usageCap * 1e12)).toString(),
-        expiresBySeconds: Math.floor((endTime - new Date()) / 1000)
-      });
-    }
-
     document.getElementById('create-modal').classList.add('hidden');
     document.getElementById('create-pool-form').reset();
     document.getElementById('whitelist-preview-create').innerHTML = '';
@@ -173,24 +153,6 @@ document.getElementById('create-pool-form').addEventListener('submit', async (e)
   }
 });
 
-// Edit Pool
-window.editPool = (poolId) => {
-  const pool = poolDataMap.get(poolId);
-  if (!pool) {
-    showToast('Pool data not found.');
-    return;
-  }
-  currentEditPoolId = poolId;
-  document.getElementById('edit-pool-name').value = pool.name;
-  document.getElementById('edit-start-time').value = zuluToLocal(pool.startTime);
-  document.getElementById('edit-end-time').value = zuluToLocal(pool.endTime);
-  document.getElementById('edit-usage-cap').value = pool.usageCap;
-  document.getElementById('edit-whitelist').value = pool.whitelist.join('\n');
-  document.getElementById('edit-sponsor-info').value = pool.sponsorInfo || '';
-  document.getElementById('edit-modal').classList.remove('hidden');
-  updateWhitelistPreview('edit-whitelist', 'whitelist-preview-edit');
-};
-
 document.getElementById('edit-pool-form').addEventListener('submit', async (e) => {
   e.preventDefault();
   const addresses = document.getElementById('edit-whitelist').value.split('\n').map(a => a.trim()).filter(a => a);
@@ -199,64 +161,31 @@ document.getElementById('edit-pool-form').addEventListener('submit', async (e) =
     showToast('Please fix invalid addresses: ' + invalidAddresses.join(', '));
     return;
   }
-  const startTime = new Date(document.getElementById('edit-start-time').value);
-  const endTime = new Date(document.getElementById('edit-end-time').value);
-  if (startTime >= endTime) {
+  const startTime = document.getElementById('edit-start-time').value ? new Date(document.getElementById('edit-start-time').value) : null;
+  const endTime = document.getElementById('edit-end-time').value ? new Date(document.getElementById('edit-end-time').value) : null;
+  if (startTime && endTime && startTime >= endTime) {
     showToast('Start time must be before end time.');
     return;
   }
-
-  const updates = {
-    name: document.getElementById('edit-pool-name').value,
-    startTime: localToZulu(document.getElementById('edit-start-time').value),
-    endTime: localToZulu(document.getElementById('edit-end-time').value),
-    usageCap: parseFloat(document.getElementById('edit-usage-cap').value),
-    whitelist: addresses,
-    sponsorInfo: document.getElementById('edit-sponsor-info').value
-  };
-
+  const updates = {};
+  const editStartTime = document.getElementById('edit-start-time').value;
+  const editEndTime = document.getElementById('edit-end-time').value;
+  const editUsageCap = document.getElementById('edit-usage-cap').value;
+  const editWhitelist = document.getElementById('edit-whitelist').value;
+  if (editStartTime) updates.startTime = localToZulu(editStartTime);
+  if (editEndTime) updates.endTime = localToZulu(editEndTime);
+  if (editUsageCap) updates.usageCap = parseFloat(editUsageCap);
+  if (editWhitelist) updates.whitelist = addresses;
   try {
-    const pool = poolDataMap.get(currentEditPoolId);
-    const oldWhitelist = pool.whitelist;
-    const newWhitelist = addresses;
-
-    // Revoke credits for removed addresses
-    const removedAddresses = oldWhitelist.filter(addr => !newWhitelist.includes(addr));
-    for (const address of removedAddresses) {
-      await turbo.revokeCredits({ approvedAddress: address });
-    }
-
-    // Share credits with new addresses
-    const addedAddresses = newWhitelist.filter(addr => !oldWhitelist.includes(addr));
-    for (const address of addedAddresses) {
-      await turbo.shareCredits({
-        approvedAddress: address,
-        approvedWincAmount: BigInt(Math.round(updates.usageCap * 1e12)).toString(),
-        expiresBySeconds: Math.floor((endTime - new Date()) / 1000)
-      });
-    }
-
-    // Update existing addresses if usageCap or endTime changed
-    const unchangedAddresses = newWhitelist.filter(addr => oldWhitelist.includes(addr));
-    if (updates.usageCap !== pool.usageCap || updates.endTime !== pool.endTime) {
-      for (const address of unchangedAddresses) {
-        await turbo.revokeCredits({ approvedAddress: address });
-        await turbo.shareCredits({
-          approvedAddress: address,
-          approvedWincAmount: BigInt(Math.round(updates.usageCap * 1e12)).toString(),
-          expiresBySeconds: Math.floor((endTime - new Date()) / 1000)
-        });
-      }
-    }
-
-    const response = await fetch(`${document.getElementById('edit-server-url').value}/pools/${currentEditPoolId}?creatorAddress=${walletAddress}`, {
+    const message = JSON.stringify({ poolId: currentEditPoolId, updates });
+    const signature = await window.arweaveWallet.signMessage(new TextEncoder().encode(message));
+    const response = await fetch(`${document.getElementById('server-url').value}/pool/${currentEditPoolId}`, {
       method: 'PATCH',
       headers: { 'Content-Type': 'application/json', 'X-API-Key': DEPLOY_API_KEY },
-      body: JSON.stringify(updates)
+      body: JSON.stringify({ ...updates, signature, message, creatorAddress: walletAddress })
     });
     const result = await response.json();
     if (!response.ok) throw new Error(result.error || 'Failed to update pool');
-
     document.getElementById('edit-modal').classList.add('hidden');
     document.getElementById('whitelist-preview-edit').innerHTML = '';
     loadPools();
@@ -266,20 +195,109 @@ document.getElementById('edit-pool-form').addEventListener('submit', async (e) =
   }
 });
 
-// View Pool Details
+async function sponsorCredits(poolId) {
+  try {
+    const pool = poolDataMap.get(poolId);
+    if (!pool) {
+      showToast('Pool data not found.');
+      return;
+    }
+    const endTime = new Date(pool.endTime);
+    const currentTime = new Date();
+    const secondsUntilEnd = Math.floor((endTime - currentTime) / 1000);
+    if (secondsUntilEnd <= 0) {
+      showToast('Pool has ended, cannot sponsor credits.');
+      return;
+    }
+    const message = JSON.stringify({ poolId, action: 'sponsor-credits' });
+    const signature = await window.arweaveWallet.signMessage(new TextEncoder().encode(message));
+    const response = await fetch(`${document.getElementById('server-url').value}/share-credits`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'X-API-Key': DEPLOY_API_KEY },
+      body: JSON.stringify({ eventPoolId: poolId, signature, message, creatorAddress: walletAddress })
+    });
+    const result = await response.json();
+    if (!response.ok) throw new Error(result.error || 'Failed to sponsor credits');
+    showToast('Credits sponsored successfully!', 'success');
+    loadPools();
+  } catch (error) {
+    showToast('Error sponsoring credits: ' + error.message);
+  }
+}
+
+async function revokeAccess(poolId, address) {
+  try {
+    const pool = poolDataMap.get(poolId);
+    if (!pool) {
+      showToast('Pool data not found.');
+      return;
+    }
+    const message = JSON.stringify({ poolId, address, action: 'revoke-access' });
+    const signature = await window.arweaveWallet.signMessage(new TextEncoder().encode(message));
+    const response = await fetch(`${document.getElementById('server-url').value}/revoke-access`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'X-API-Key': DEPLOY_API_KEY },
+      body: JSON.stringify({ poolId, address, signature, message, creatorAddress: walletAddress })
+    });
+    const result = await response.json();
+    if (!response.ok) throw new Error(result.error || 'Failed to revoke access');
+    showToast('Access revoked successfully!', 'success');
+    loadPools();
+  } catch (error) {
+    showToast('Error revoking access: ' + error.message);
+  }
+}
+
+window.deletePoolConfirm = async () => {
+  const confirmDelete = confirm('Are you sure you want to delete this pool? This action cannot be undone.');
+  if (confirmDelete) {
+    try {
+      const message = JSON.stringify({ poolId: currentEditPoolId, action: 'delete-pool' });
+      const signature = await window.arweaveWallet.signMessage(new TextEncoder().encode(message));
+      const response = await fetch(`${document.getElementById('server-url').value}/pool/${currentEditPoolId}`, {
+        method: 'DELETE',
+        headers: { 'Content-Type': 'application/json', 'X-API-Key': DEPLOY_API_KEY },
+        body: JSON.stringify({ signature, message, creatorAddress: walletAddress })
+      });
+      const result = await response.json();
+      if (!response.ok) throw new Error(result.error || 'Failed to delete pool');
+      document.getElementById('details-modal').classList.add('hidden');
+      loadPools();
+      showToast('Pool deleted successfully!', 'success');
+    } catch (error) {
+      showToast('Error deleting pool: ' + error.message);
+    }
+  }
+};
+
+window.editPool = (poolId) => {
+  const pool = poolDataMap.get(poolId);
+  if (!pool) {
+    showToast('Pool data not found.');
+    return;
+  }
+  currentEditPoolId = poolId;
+  document.getElementById('edit-start-time').value = zuluToLocal(pool.startTime);
+  document.getElementById('edit-end-time').value = zuluToLocal(pool.endTime);
+  document.getElementById('edit-usage-cap').value = pool.usageCap;
+  document.getElementById('edit-whitelist').value = pool.whitelist.join('\n');
+  document.getElementById('edit-modal').classList.remove('hidden');
+  updateWhitelistPreview('edit-whitelist', 'whitelist-preview-edit');
+};
+
 window.viewDetails = async (poolId) => {
   const pool = poolDataMap.get(poolId);
   if (!pool) {
     showToast('Pool data not found.');
     return;
   }
+  currentEditPoolId = poolId;
   try {
-    const balanceResponse = await fetch(`${document.getElementById('server-url').value}/pools/${poolId}/balance?creatorAddress=${walletAddress}`, {
+    const balanceResponse = await fetch(`${document.getElementById('server-url').value}/pool/${poolId}/balance?creatorAddress=${walletAddress}`, {
       headers: { 'X-API-Key': DEPLOY_API_KEY }
     });
     const balanceData = balanceResponse.ok ? await balanceResponse.json() : { balance: { balance: 0 } };
     const balance = balanceData.balance || { balance: 0 };
-
     const usage = pool.usage || {};
     const now = new Date();
     const endTime = new Date(pool.endTime);
@@ -288,7 +306,6 @@ window.viewDetails = async (poolId) => {
     const statusColor = isEnded ? 'text-red-600 bg-red-100' : 'text-green-600 bg-green-100';
     const usageEntries = Object.entries(usage);
     const totalUsage = usageEntries.reduce((sum, [, usageAmount]) => sum + Number(usageAmount || 0), 0);
-
     const detailsContent = `
       <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
         <div class="space-y-6">
@@ -343,6 +360,11 @@ window.viewDetails = async (poolId) => {
               </div>
             </div>
           </div>
+          <div class="pool-details-section rounded-2xl p-6">
+            <h4 class="font-bold text-gray-900 mb-4 text-lg">Actions</h4>
+            <button onclick="sponsorCredits('${poolId}')" class="w-full bg-indigo-500 hover:bg-indigo-600 text-white py-2 rounded-lg text-sm font-semibold transition-all mb-2">Sponsor Credits</button>
+            <button onclick="downloadWallet('${poolId}')" class="w-full bg-gray-500 hover:bg-gray-600 text-white py-2 rounded-lg text-sm font-semibold transition-all">Download Wallet</button>
+          </div>
         </div>
         <div class="space-y-6">
           <div class="pool-details-section rounded-2xl p-6">
@@ -351,7 +373,7 @@ window.viewDetails = async (poolId) => {
               ${pool.whitelist.map(address => `
                 <div class="flex justify-between items-center p-3 bg-gray-50 rounded-lg border border-gray-200">
                   <span class="text-xs font-mono text-gray-700 break-all flex-1 mr-4">${address}</span>
-                  ${walletAddress === pool.creatorAddress ? `<button onclick="revokeAccess('${poolId}', '${address}')" class="bg-red-500 hover:bg-red-600 text-white py-1 px-3 rounded-lg text-sm font-semibold transition-all">Revoke</button>` : ''}
+                  <button onclick="revokeAccess('${poolId}', '${address}')" class="text-xs bg-red-500 hover:bg-red-600 text-white py-1 px-2 rounded-lg">Revoke</button>
                 </div>
               `).join('')}
             </div>
@@ -379,28 +401,29 @@ window.viewDetails = async (poolId) => {
   }
 };
 
-// Revoke Access
-window.revokeAccess = async (poolId, address) => {
+async function downloadWallet(poolId) {
   try {
-    await turbo.revokeCredits({ approvedAddress: address });
-    const response = await fetch(`${document.getElementById('server-url').value}/pools/${poolId}/whitelist/${address}`, {
-      method: 'DELETE',
-      headers: { 'X-API-Key': DEPLOY_API_KEY }
+    const message = JSON.stringify({ poolId, action: 'download-wallet' });
+    const signature = await window.arweaveWallet.signMessage(new TextEncoder().encode(message));
+    const response = await fetch(`${document.getElementById('server-url').value}/pool/${poolId}/wallet`, {
+      method: 'GET',
+      headers: { 'X-API-Key': DEPLOY_API_KEY, 'X-Signature': signature, 'X-Message': message }
     });
-    if (!response.ok) throw new Error('Failed to revoke access');
-    showToast('Access revoked successfully!', 'success');
-    viewDetails(poolId);
+    const result = await response.json();
+    if (!response.ok) throw new Error(result.error || 'Failed to download wallet');
+    const walletBlob = new Blob([JSON.stringify(result.wallet, null, 2)], { type: 'application/json' });
+    const url = URL.createObjectURL(walletBlob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `${poolId}.json`;
+    a.click();
+    URL.revokeObjectURL(url);
+    showToast('Wallet downloaded successfully!', 'success');
   } catch (error) {
-    showToast('Error revoking access: ' + error.message);
+    showToast('Error downloading wallet: ' + error.message);
   }
-};
+}
 
-// Download Wallet (Placeholder)
-window.downloadWallet = async (poolId) => {
-  showToast('Wallet download not implemented in this version.');
-};
-
-// Load Pools
 async function loadPools() {
   const poolsGrid = document.getElementById('pools-grid');
   try {
@@ -411,84 +434,66 @@ async function loadPools() {
       const errorData = await response.json();
       throw new Error(errorData.error || 'Failed to fetch pools');
     }
-
     const pools = await response.json();
     poolDataMap.clear();
     poolsGrid.innerHTML = '';
     let totalPools = 0, activePools = 0;
-
     for (const [poolId, pool] of Object.entries(pools)) {
       poolDataMap.set(poolId, pool);
       totalPools++;
-      try {
-        const balanceResponse = await fetch(`${document.getElementById('server-url').value}/pools/${poolId}/balance?creatorAddress=${walletAddress}`, {
-          headers: { 'X-API-Key': DEPLOY_API_KEY }
-        });
-        const balanceData = balanceResponse.ok ? await balanceResponse.json() : { balance: { balance: 0 } };
-        const balance = balanceData.balance || { balance: 0 };
-
-        const usageData = { usage: pool.usage || {} };
-        const now = new Date();
-        const endTime = new Date(pool.endTime);
-        const isEnded = now > endTime;
-        if (!isEnded) activePools++;
-
-        const statusColor = isEnded ? 'bg-red-100 text-red-600' : 'bg-green-100 text-green-600';
-        const statusText = isEnded ? 'Ended' : 'Active';
-
-        const usageEntries = Object.entries(usageData.usage);
-        const totalUsage = usageEntries.reduce((sum, [, usage]) => sum + Number(usage || 0), 0);
-
-        const poolCard = document.createElement('div');
-        poolCard.className = 'pool-card p-6';
-        poolCard.innerHTML = `
-          <div class="flex justify-between items-start mb-4">
-            <h3 class="text-xl font-bold text-gray-900">${pool.name}</h3>
-            <span class="px-3 py-1 rounded-full text-xs font-semibold ${statusColor}">${statusText}</span>
+      const balanceResponse = await fetch(`${document.getElementById('server-url').value}/pool/${poolId}/balance?creatorAddress=${walletAddress}`, {
+        headers: { 'X-API-Key': DEPLOY_API_KEY }
+      });
+      const balanceData = balanceResponse.ok ? await balanceResponse.json() : { balance: { balance: 0 } };
+      const balance = balanceData.balance || { balance: 0 };
+      const usageData = { usage: pool.usage || {} };
+      const now = new Date();
+      const endTime = new Date(pool.endTime);
+      const isEnded = now > endTime;
+      if (!isEnded) activePools++;
+      const statusColor = isEnded ? 'bg-red-100 text-red-600' : 'bg-green-100 text-green-600';
+      const statusText = isEnded ? 'Ended' : 'Active';
+      const usageEntries = Object.entries(usageData.usage);
+      const totalUsage = usageEntries.reduce((sum, [, usage]) => sum + Number(usage || 0), 0);
+      const poolCard = document.createElement('div');
+      poolCard.className = 'pool-card p-6';
+      poolCard.innerHTML = `
+        <div class="flex justify-between items-start mb-4">
+          <h3 class="text-xl font-bold text-gray-900">${pool.name}</h3>
+          <span class="px-3 py-1 rounded-full text-xs font-semibold ${statusColor}">${statusText}</span>
+        </div>
+        <div class="space-y-3 text-sm text-gray-600 mb-6">
+          <div class="flex justify-between">
+            <span>Balance:</span>
+            <span class="font-semibold">${(balance.balance || 0).toFixed(4)} Credits</span>
           </div>
-          <div class="space-y-3 text-sm text-gray-600 mb-6">
-            <div class="flex justify-between">
-              <span>Balance:</span>
-              <span class="font-semibold">${(balance.balance || 0).toFixed(4)} Credits</span>
-            </div>
-            <div class="flex justify-between">
-              <span>Usage:</span>
-              <span class="font-semibold">${totalUsage.toFixed(4)} / ${pool.usageCap}</span>
-            </div>
-            <div class="flex justify-between">
-              <span>Duration:</span>
-              <span class="text-xs">${formatDisplayTime(pool.startTime)} - ${formatDisplayTime(pool.endTime)}</span>
-            </div>
-            <div class="flex justify-between">
-              <span>Addresses:</span>
-              <span class="font-semibold">${pool.whitelist.length} whitelisted</span>
-            </div>
+          <div class="flex justify-between">
+            <span>Usage:</span>
+            <span class="font-semibold">${totalUsage.toFixed(4)} / ${pool.usageCap}</span>
           </div>
-          <div class="space-y-2">
-            <button onclick="viewDetails('${poolId}')" class="w-full bg-indigo-500 hover:bg-indigo-600 text-white py-2 rounded-lg text-sm font-semibold transition-all">View Details</button>
-            <button onclick="downloadWallet('${poolId}')" class="w-full bg-blue-500 hover:bg-blue-600 text-white py-2 rounded-lg text-sm font-semibold transition-all">Download Wallet</button>
-            ${!isEnded ? `<button onclick="editPool('${poolId}')" class="w-full bg-gray-500 hover:bg-gray-600 text-white py-2 rounded-lg text-sm font-semibold transition-all">Edit Pool</button>` : ''}
+          <div class="flex justify-between">
+            <span>Duration:</span>
+            <span class="text-xs">${formatDisplayTime(pool.startTime)} - ${formatDisplayTime(pool.endTime)}</span>
           </div>
-        `;
-        poolsGrid.appendChild(poolCard);
-      } catch (error) {
-        console.error(`Error loading data for pool ${poolId}:`, error);
-      }
+          <div class="flex justify-between">
+            <span>Addresses:</span>
+            <span class="font-semibold">${pool.whitelist.length} whitelisted</span>
+          </div>
+        </div>
+        <div class="space-y-2">
+          <button onclick="viewDetails('${poolId}')" class="w-full bg-indigo-500 hover:bg-indigo-600 text-white py-2 rounded-lg text-sm font-semibold transition-all">View Details</button>
+          ${!isEnded ? `<button onclick="editPool('${poolId}')" class="w-full bg-gray-500 hover:bg-gray-600 text-white py-2 rounded-lg text-sm font-semibold transition-all">Edit Pool</button>` : ''}
+        </div>
+      `;
+      poolsGrid.appendChild(poolCard);
     }
-
     document.getElementById('total-pools').textContent = totalPools;
     document.getElementById('active-pools').textContent = activePools;
-
     if (Object.keys(pools).length === 0) {
       poolsGrid.innerHTML = '<div class="col-span-full text-center py-12 text-gray-600"><p class="text-lg">No pools found yet</p><p class="text-gray-500">Create your first pool to get started!</p></div>';
     }
   } catch (error) {
-    console.error('Error loading pools:', error);
     poolsGrid.innerHTML = '<p class="col-span-full text-center text-red-500 py-8">Failed to load pools. Please try again.</p>';
     showToast('Error loading pools: ' + error.message);
   }
 }
-
-// Initialize Whitelist Previews
-document.getElementById('whitelist').addEventListener('input', () => updateWhitelistPreview('whitelist', 'whitelist-preview-create'));
-document.getElementById('edit-whitelist').addEventListener('input', () => updateWhitelistPreview('edit-whitelist', 'whitelist-preview-edit'));
