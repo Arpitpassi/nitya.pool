@@ -1,0 +1,663 @@
+/* Global Styles */
+body {
+  font-family: 'Urbanist', sans-serif;
+  background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+  color: #1f2937;
+  margin: 0;
+  min-height: 100vh;
+  overflow-x: hidden;
+}
+
+/* Geometric Decorations */
+.geometric-decor {
+  position: fixed;
+  pointer-events: none;
+  z-index: 0;
+  opacity: 0.8;
+}
+
+.geometric-decor.top-right {
+  top: -100px;
+  right: -100px;
+  width: 300px;
+  height: 300px;
+  background: conic-gradient(from 45deg, rgba(79, 70, 229, 0.15), rgba(124, 58, 237, 0.15), rgba(79, 70, 229, 0.15));
+  border-radius: 50%;
+  animation: float 6s ease-in-out infinite;
+}
+
+.geometric-decor.bottom-left {
+  bottom: -80px;
+  left: -80px;
+  width: 250px;
+  height: 250px;
+  background: conic-gradient(from 225deg, rgba(124, 58, 237, 0.15), rgba(79, 70, 229, 0.15), rgba(124, 58, 237, 0.15));
+  border-radius: 50%;
+  animation: float 8s ease-in-out infinite reverse;
+}
+
+@keyframes float {
+  0%, 100% { transform: translateY(0px) rotate(0deg); }
+  50% { transform: translateY(-20px) rotate(180deg); }
+}
+
+/* Container */
+.container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 1.5rem;
+}
+
+/* Sidebar */
+.sidebar {
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.95) 0%, rgba(255, 255, 255, 0.90) 100%);
+  backdrop-filter: blur(15px);
+  -webkit-backdrop-filter: blur(15px);
+  box-shadow: 2px 0 20px rgba(0, 0, 0, 0.08);
+  border-right: 1px solid rgba(255, 255, 255, 0.2);
+  width: 100%;
+  max-width: 256px; /* Slightly adjusted from w-64 (256px) for consistency */
+}
+
+/* Glass Effect Cards */
+.glass-card, .stat-card, .pool-card, .modal-content, .details-modal-content, .pool-details-section {
+  background: rgba(255, 255, 255, 0.75);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  box-shadow: 0 12px 40px rgba(31, 38, 135, 0.12);
+  border: 1px solid rgba(255, 255, 255, 0.25);
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  border-radius: 1.5rem; /* Consistent with rounded-2xl */
+}
+
+.stat-card:hover, .pool-card:hover {
+  transform: translateY(-6px) scale(1.02);
+  box-shadow: 0 20px 50px rgba(31, 38, 135, 0.2);
+  border-color: rgba(79, 70, 229, 0.3);
+}
+
+/* Primary Button Styles */
+.btn-primary {
+  background: linear-gradient(135deg, #4F46E5 0%, #7C3AED 50%, #8B5CF6 100%);
+  color: white;
+  border: none;
+  cursor: pointer;
+  font-weight: 600;
+  letter-spacing: 0.025em;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  position: relative;
+  overflow: hidden;
+  border-radius: 0.75rem; /* Consistent with rounded-xl */
+  padding: 0.75rem 1.5rem;
+}
+
+.btn-primary::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+  transition: left 0.5s;
+}
+
+.btn-primary:hover::before {
+  left: 100%;
+}
+
+.btn-primary:hover {
+  background: linear-gradient(135deg, #4338CA 0%, #6D28D9 50%, #7C3AED 100%);
+  transform: translateY(-2px);
+  box-shadow: 0 10px 25px rgba(79, 70, 229, 0.4);
+}
+
+.btn-primary:active {
+  transform: translateY(0);
+  box-shadow: 0 5px 15px rgba(79, 70, 229, 0.3);
+}
+
+.btn-primary:focus {
+  outline: 2px solid rgba(79, 70, 229, 0.5);
+  outline-offset: 2px;
+}
+
+/* Secondary Button Styles */
+.btn-secondary {
+  background: rgba(255, 255, 255, 0.3);
+  color: #374151;
+  border: 1px solid rgba(255, 255, 255, 0.4);
+  cursor: pointer;
+  font-weight: 500;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  backdrop-filter: blur(8px);
+  border-radius: 0.75rem;
+  padding: 0.75rem 1.5rem;
+}
+
+.btn-secondary:hover {
+  background: rgba(255, 255, 255, 0.5);
+  transform: translateY(-2px);
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.1);
+  border-color: rgba(79, 70, 229, 0.3);
+}
+
+.btn-secondary:active {
+  transform: translateY(0);
+}
+
+.btn-secondary:focus {
+  outline: 2px solid rgba(79, 70, 229, 0.5);
+  outline-offset: 2px;
+}
+
+/* Delete Button Styles */
+.btn-delete {
+  background: linear-gradient(135deg, #EF4444 0%, #DC2626 50%, #B91C1C 100%);
+  color: white;
+  border: none;
+  cursor: pointer;
+  font-weight: 600;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  position: relative;
+  overflow: hidden;
+  border-radius: 0.75rem;
+  padding: 0.75rem 1.5rem;
+}
+
+.btn-delete::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+  transition: left 0.5s;
+}
+
+.btn-delete:hover::before {
+  left: 100%;
+}
+
+.btn-delete:hover {
+  background: linear-gradient(135deg, #DC2626 0%, #B91C1C 50%, #991B1B 100%);
+  transform: translateY(-2px);
+  box-shadow: 0 10px 25px rgba(239, 68, 68, 0.4);
+}
+
+.btn-delete:active {
+  transform: translateY(0);
+  box-shadow: 0 5px 15px rgba(239, 68, 68, 0.3);
+}
+
+.btn-delete:focus {
+  outline: 2px solid rgba(239, 68, 68, 0.5);
+  outline-offset: 2px;
+}
+
+/* Warning/Revoke Button Styles */
+.btn-warning {
+  background: linear-gradient(135deg, #F59E0B 0%, #D97706 50%, #B45309 100%);
+  color: white;
+  border: none;
+  cursor: pointer;
+  font-weight: 600;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  position: relative;
+  overflow: hidden;
+  border-radius: 0.75rem;
+  padding: 0.75rem 1.5rem;
+}
+
+.btn-warning::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+  transition: left 0.5s;
+}
+
+.btn-warning:hover::before {
+  left: 100%;
+}
+
+.btn-warning:hover {
+  background: linear-gradient(135deg, #D97706 0%, #B45309 50%, #92400E 100%);
+  transform: translateY(-2px);
+  box-shadow: 0 10px 25px rgba(245, 158, 11, 0.4);
+}
+
+.btn-warning:active {
+  transform: translateY(0);
+  box-shadow: 0 5px 15px rgba(245, 158, 11, 0.3);
+}
+
+.btn-warning:focus {
+  outline: 2px solid rgba(245, 158, 11, 0.5);
+  outline-offset: 2px;
+}
+
+/* Success/Download Button Styles */
+.btn-success {
+  background: linear-gradient(135deg, #10B981 0%, #059669 50%, #047857 100%);
+  color: white;
+  border: none;
+  cursor: pointer;
+  font-weight: 600;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  position: relative;
+  overflow: hidden;
+  border-radius: 0.75rem;
+  padding: 0.75rem 1.5rem;
+}
+
+.btn-success::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+  transition: left 0.5s;
+}
+
+.btn-success:hover::before {
+  left: 100%;
+}
+
+.btn-success:hover {
+  background: linear-gradient(135deg, #059669 0%, #047857 50%, #065F46 100%);
+  transform: translateY(-2px);
+  box-shadow: 0 10px 25px rgba(16, 185, 129, 0.4);
+}
+
+.btn-success:active {
+  transform: translateY(0);
+  box-shadow: 0 5px 15px rgba(16, 185, 129, 0.3);
+}
+
+.btn-success:focus {
+  outline: 2px solid rgba(16, 185, 129, 0.5);
+  outline-offset: 2px;
+}
+
+/* Input Fields */
+.input-field, .whitelist-textarea {
+  background: rgba(255, 255, 255, 0.9);
+  border: 1px solid rgba(0, 0, 0, 0.08);
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  font-size: 14px;
+  backdrop-filter: blur(8px);
+  border-radius: 0.75rem;
+  padding: 0.75rem;
+}
+
+.input-field:focus, .whitelist-textarea:focus {
+  outline: none;
+  border-color: #4F46E5;
+  box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.12);
+  background: rgba(255, 255, 255, 0.95);
+  transform: translateY(-1px);
+}
+
+.whitelist-textarea {
+  min-height: 120px;
+  resize: vertical;
+}
+
+/* Modal Styles */
+.modal-overlay {
+  background: rgba(0, 0, 0, 0.6);
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
+  animation: fadeIn 0.3s ease-out;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+.modal-content, .details-modal-content {
+  animation: slideIn 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+  max-height: 85vh;
+  overflow-y: auto;
+}
+
+/* Close Button Styling */
+.close-btn {
+  background: rgba(255, 255, 255, 0.3);
+  color: #374151;
+  border: none;
+  border-radius: 50%;
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  font-size: 20px;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.close-btn:hover {
+  background: rgba(239, 68, 68, 0.9);
+  color: white;
+  transform: scale(1.1);
+}
+
+.close-btn:focus {
+  outline: 2px solid rgba(239, 68, 68, 0.5);
+  outline-offset: 2px;
+}
+
+/* Address Preview Styles */
+.address-preview {
+  max-height: 180px;
+  overflow-y: auto;
+  padding: 12px;
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.6);
+  border: 1px solid rgba(0, 0, 0, 0.05);
+}
+
+.address-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 8px 12px;
+  margin-bottom: 6px;
+  border-radius: 8px;
+  font-size: 13px;
+  font-weight: 500;
+  transition: all 0.2s ease;
+}
+
+.address-item.valid {
+  background: rgba(34, 197, 94, 0.12);
+  border: 1px solid rgba(34, 197, 94, 0.25);
+  color: #065F46;
+}
+
+.address-item.invalid {
+  background: rgba(239, 68, 68, 0.12);
+  border: 1px solid rgba(239, 68, 68, 0.25);
+  color: #991B1B;
+}
+
+.remove-address-btn {
+  background: rgba(239, 68, 68, 0.9);
+  color: white;
+  border: none;
+  border-radius: 50%;
+  width: 22px;
+  height: 22px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  font-size: 12px;
+  font-weight: bold;
+  transition: all 0.2s ease;
+}
+
+.remove-address-btn:hover {
+  background: rgba(239, 68, 68, 1);
+  transform: scale(1.1);
+}
+
+.remove-address-btn:focus {
+  outline: 2px solid rgba(239, 68, 68, 0.5);
+  outline-offset: 2px;
+}
+
+/* Toast Notifications */
+#toast-container {
+  position: fixed;
+  bottom: 24px;
+  right: 24px;
+  z-index: 2000;
+}
+
+.toast {
+  padding: 16px 24px;
+  border-radius: 12px;
+  font-size: 14px;
+  font-weight: 600;
+  opacity: 0;
+  transform: translateY(30px) translateX(20px);
+  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+  backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.toast.show {
+  opacity: 1;
+  transform: translateY(0) translateX(0);
+}
+
+.toast.error {
+  background: rgba(239, 68, 68, 0.95);
+  color: white;
+  box-shadow: 0 10px 30px rgba(239, 68, 68, 0.3);
+}
+
+.toast.success {
+  background: rgba(34, 197, 94, 0.95);
+  color: white;
+  box-shadow: 0 10px 30px rgba(34, 197, 94, 0.3);
+}
+
+/* Pool Details Section */
+.pool-details-section {
+  margin-bottom: 16px;
+  transition: all 0.3s ease;
+}
+
+.pool-details-section:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 25px rgba(31, 38, 135, 0.15);
+}
+
+/* Scrollbar Customization */
+::-webkit-scrollbar {
+  width: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: rgba(255, 255, 255, 0.3);
+  border-radius: 6px;
+}
+
+::-webkit-scrollbar-thumb {
+  background: linear-gradient(180deg, #4F46E5, #7C3AED);
+  border-radius: 6px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: linear-gradient(180deg, #4338CA, #6D28D9);
+}
+
+/* Loading States */
+.loading {
+  position: relative;
+  overflow: hidden;
+}
+
+.loading::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.3), transparent);
+  animation: loading 1.5s infinite;
+  z-index: 1; /* Ensure loading doesn't obscure content */
+}
+
+@keyframes loading {
+  0% { left: -100%; }
+  100% { left: 100%; }
+}
+
+/* Pool Card Enhancements */
+.pool-card {
+  position: relative;
+  overflow: hidden;
+}
+
+.pool-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 4px;
+  background: linear-gradient(90deg, #4F46E5, #7C3AED, #8B5CF6);
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+
+.pool-card:hover::before {
+  opacity: 1;
+}
+
+/* Standardized Card Sizes */
+.stat-card, .pool-card {
+  width: 100%;
+  max-width: 360px;
+  min-height: 120px;
+  padding: 1.5rem;
+  margin-bottom: 1rem;
+  box-sizing: border-box;
+}
+
+.modal-content, .details-modal-content {
+  width: 100%;
+  max-width: 600px;
+  padding: 1.5rem;
+  box-sizing: border-box;
+}
+
+.pool-details-section {
+  width: 100%;
+  max-width: 600px;
+  padding: 1.5rem;
+  margin-bottom: 1rem;
+  box-sizing: border-box;
+}
+
+/* Pool ID Styling */
+.pool-id {
+  word-break: break-all;
+  overflow-wrap: break-word;
+  max-width: 100%;
+  font-family: 'Urbanist', monospace; /* Align with body font, keep monospace for readability */
+  font-size: 14px;
+  padding: 8px;
+  background: rgba(255, 255, 255, 0.6);
+  border-radius: 8px;
+  border: 1px solid rgba(0, 0, 0, 0.05);
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .container {
+    padding: 1rem;
+  }
+
+  .sidebar {
+    max-width: 280px;
+  }
+
+  .stat-card, .pool-card {
+    max-width: 100%;
+    padding: 1rem;
+  }
+
+  .modal-content, .details-modal-content {
+    max-width: 95%;
+    padding: 1rem;
+  }
+
+  .pool-details-section {
+    max-width: 95%;
+    padding: 1rem;
+  }
+
+  .geometric-decor.top-right {
+    width: 200px;
+    height: 200px;
+    top: -50px;
+    right: -50px;
+  }
+
+  .geometric-decor.bottom-left {
+    width: 150px;
+    height: 150px;
+    bottom: -30px;
+    left: -30px;
+  }
+
+  #toast-container {
+    right: 16px;
+    bottom: 16px;
+    left: 16px;
+  }
+
+  .toast {
+    width: calc(100% - 32px); /* Full width minus padding */
+  }
+}
+
+@media (max-width: 480px) {
+  .stat-card, .pool-card {
+    padding: 0.75rem;
+  }
+
+  .modal-content, .details-modal-content, .pool-details-section {
+    padding: 0.75rem;
+  }
+
+  .btn-primary, .btn-secondary, .btn-delete, .btn-warning, .btn-success {
+    padding: 0.75rem 1rem;
+    font-size: 14px;
+  }
+
+  .input-field, .whitelist-textarea {
+    padding: 0.75rem;
+    font-size: 14px;
+  }
+}
+
+/* Enhanced Hover Effects */
+.glass-card:hover, .pool-details-section:hover {
+  background: rgba(255, 255, 255, 0.85);
+  border-color: rgba(79, 70, 229, 0.2);
+}
+
+/* Disabled Button State */
+button:disabled,
+.btn-primary:disabled,
+.btn-secondary:disabled,
+.btn-warning:disabled,
+.btn-success:disabled,
+.btn-delete:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  transform: none;
+  box-shadow: none;
+}
+
+/* Ensure pool-details-content consistency */
+#pool-details-content .pool-details-section {
+  background: rgba(255, 255, 255, 0.75); /* Match glass effect */
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+}

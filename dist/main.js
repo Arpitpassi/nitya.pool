@@ -7,7 +7,7 @@ function showToast(message, type = 'error') {
   const toast = document.createElement('div');
   toast.className = `toast ${type} show`;
   toast.textContent = message;
-  document.body.appendChild(toast);
+  document.getElementById('toast-container').appendChild(toast); // Use toast-container
   setTimeout(() => {
     toast.classList.remove('show');
     setTimeout(() => toast.remove(), 300);
@@ -36,14 +36,41 @@ function updateWhitelistPreview(textareaId, previewId) {
   const preview = document.getElementById(previewId);
   const addresses = textarea.value.split('\n').map(a => a.trim()).filter(a => a);
   preview.innerHTML = addresses.map((address) => `
-    <div class="p-2 bg-gray-100 rounded text-sm ${isValidArweaveAddress(address) ? 'text-green-600' : 'text-red-600'}">
+    <div class="address-item ${isValidArweaveAddress(address) ? 'valid' : 'invalid'}">
       <span class="break-all">${address}</span>
     </div>
   `).join('');
 }
 
+// Handle file uploads for whitelist
+function handleWhitelistFile(fileInputId, textareaId) {
+  const fileInput = document.getElementById(fileInputId);
+  const textarea = document.getElementById(textareaId);
+  fileInput.addEventListener('change', (event) => {
+    const file = event.target.files[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      try {
+        const addresses = JSON.parse(e.target.result);
+        if (!Array.isArray(addresses)) {
+          showToast('Invalid JSON: Must be an array of addresses.');
+          return;
+        }
+        textarea.value = addresses.join('\n');
+        updateWhitelistPreview(textareaId, `${textareaId}-preview-${fileInputId.includes('edit') ? 'edit' : 'create'}`);
+      } catch (error) {
+        showToast('Error parsing JSON file: ' + error.message);
+      }
+    };
+    reader.readAsText(file);
+  });
+}
+
 document.getElementById('whitelist').addEventListener('input', () => updateWhitelistPreview('whitelist', 'whitelist-preview-create'));
 document.getElementById('edit-whitelist').addEventListener('input', () => updateWhitelistPreview('edit-whitelist', 'whitelist-preview-edit'));
+handleWhitelistFile('whitelist-file', 'whitelist');
+handleWhitelistFile('edit-whitelist-file', 'edit-whitelist');
 
 document.getElementById('connect-wallet').addEventListener('click', async () => {
   try {
@@ -99,11 +126,13 @@ document.getElementById('create-pool-btn').addEventListener('click', () => {
 
 document.getElementById('cancel-create').addEventListener('click', () => {
   document.getElementById('create-modal').classList.add('hidden');
+  document.getElementById('create-pool-form').reset();
   document.getElementById('whitelist-preview-create').innerHTML = '';
 });
 
 document.getElementById('cancel-edit').addEventListener('click', () => {
   document.getElementById('edit-modal').classList.add('hidden');
+  document.getElementById('edit-pool-form').reset();
   document.getElementById('whitelist-preview-edit').innerHTML = '';
 });
 
@@ -167,6 +196,11 @@ document.getElementById('create-pool-form').addEventListener('submit', async (e)
 document.getElementById('edit-pool-form').addEventListener('submit', async (e) => {
   e.preventDefault();
   
+  if (!currentEditPoolId) {
+    showToast('No pool selected for editing.');
+    return;
+  }
+  
   const poolPassword = document.getElementById('edit-pool-password').value;
   if (!poolPassword) {
     showToast('Pool password is required to edit.');
@@ -197,8 +231,6 @@ document.getElementById('edit-pool-form').addEventListener('submit', async (e) =
   if (editUsageCap) updates.usageCap = parseFloat(editUsageCap);
   if (editWhitelist) updates.whitelist = addresses;
   
-  console.log('Edit pool request body:', updates);
-  
   try {
     const serverUrl = document.getElementById('server-url').value;
     if (!serverUrl) {
@@ -219,8 +251,8 @@ document.getElementById('edit-pool-form').addEventListener('submit', async (e) =
       throw new Error(`${result.error || 'Failed to update pool'} (${result.code || 'UNKNOWN_ERROR'})`);
     }
     document.getElementById('edit-modal').classList.add('hidden');
-    document.getElementById('whitelist-preview-edit').innerHTML = '';
     document.getElementById('edit-pool-form').reset();
+    document.getElementById('whitelist-preview-edit').innerHTML = '';
     loadPools();
     showToast('Pool updated successfully!', 'success');
   } catch (error) {
@@ -247,14 +279,12 @@ async function sponsorCredits(poolId) {
       return;
     }
     
-    // Prompt for password
     const password = prompt('Enter the pool password to sponsor credits:');
     if (!password) {
       showToast('Password required to sponsor credits.');
       return;
     }
     
-    // Show loading state
     const sponsorButton = document.getElementById(`sponsor-btn-${poolId}`);
     if (sponsorButton) {
       sponsorButton.disabled = true;
@@ -267,7 +297,7 @@ async function sponsorCredits(poolId) {
         const response = await fetch(`${serverUrl}/share-credits`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json', 'X-API-Key': DEPLOY_API_KEY },
-          body: JSON.stringify({ eventPoolId: poolId, walletAddress })
+          body: JSON.stringify({ eventPoolId: poolId, walletAddress, password })
         });
         const result = await response.json();
         if (!response.ok) {
@@ -280,7 +310,6 @@ async function sponsorCredits(poolId) {
       }
     }
     
-    // Reset button state
     if (sponsorButton) {
       sponsorButton.disabled = false;
       sponsorButton.textContent = 'Sponsor Credits';
@@ -311,14 +340,12 @@ async function revokeCredits(poolId) {
       return;
     }
     
-    // Prompt for password
     const password = prompt('Enter the pool password to revoke credits:');
     if (!password) {
       showToast('Password required to revoke credits.');
       return;
     }
     
-    // Show loading state
     const revokeButton = document.getElementById(`revoke-btn-${poolId}`);
     if (revokeButton) {
       revokeButton.disabled = true;
@@ -348,7 +375,6 @@ async function revokeCredits(poolId) {
       }
     }
     
-    // Reset button state
     if (revokeButton) {
       revokeButton.disabled = false;
       revokeButton.textContent = 'Revoke Credits';
@@ -377,6 +403,11 @@ window.revokeAccess = async () => {
   
   if (!isValidArweaveAddress(walletAddressInput)) {
     showToast('Please enter a valid Arweave address.');
+    return;
+  }
+  
+  if (!currentEditPoolId) {
+    showToast('No pool selected. Please view pool details first.');
     return;
   }
   
@@ -437,8 +468,6 @@ window.shareCredits = async () => {
     walletAddress: address
   };
   
-  console.log('Share credits request:', requestBody);
-  
   try {
     const response = await fetch(`${serverUrl}/share-credits`, {
       method: 'POST',
@@ -462,6 +491,11 @@ window.downloadWallet = async () => {
   
   if (!password) {
     showToast('Please enter the pool password.');
+    return;
+  }
+  
+  if (!currentEditPoolId) {
+    showToast('No pool selected. Please view pool details first.');
     return;
   }
   
@@ -501,6 +535,11 @@ window.downloadWallet = async () => {
 };
 
 window.deletePoolConfirm = async () => {
+  if (!currentEditPoolId) {
+    showToast('No pool selected. Please view pool details first.');
+    return;
+  }
+  
   const confirmDelete = confirm('Are you sure you want to delete this pool? This action cannot be undone.');
   if (confirmDelete) {
     const password = prompt('Enter the pool password to confirm deletion:');
@@ -543,6 +582,7 @@ window.editPool = (poolId) => {
     return;
   }
   currentEditPoolId = poolId;
+  document.getElementById('edit-pool-id').value = poolId;
   document.getElementById('edit-start-time').value = zuluToLocal(pool.startTime);
   document.getElementById('edit-end-time').value = zuluToLocal(pool.endTime);
   document.getElementById('edit-usage-cap').value = pool.usageCap;
@@ -578,7 +618,7 @@ window.viewDetails = async (poolId) => {
     const detailsContent = `
       <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
         <div class="space-y-6">
-          <div class="pool-details-section rounded-2xl p-6 bg-white shadow">
+          <div class="pool-details-section rounded-2xl p-6">
             <h4 class="font-bold text-gray-900 mb-4 text-lg">Pool Information</h4>
             <div class="space-y-3 text-sm">
               <div class="flex justify-between py-2 border-b border-gray-200">
@@ -591,11 +631,11 @@ window.viewDetails = async (poolId) => {
               </div>
               <div class="flex justify-between py-2">
                 <span class="text-gray-600 font-medium">Pool ID:</span>
-                <span class="font-mono text-xs bg-gray-100 px-2 py-1 rounded">${poolId}</span>
+                <span class="pool-id">${poolId}</span>
               </div>
             </div>
           </div>
-          <div class="pool-details-section rounded-2xl p-6 bg-white shadow">
+          <div class="pool-details-section rounded-2xl p-6">
             <h4 class="font-bold text-gray-900 mb-4 text-lg">Time & Usage</h4>
             <div class="space-y-3 text-sm">
               <div class="flex justify-between py-2 border-b border-gray-200">
@@ -612,7 +652,7 @@ window.viewDetails = async (poolId) => {
               </div>
             </div>
           </div>
-          <div class="pool-details-section rounded-2xl p-6 bg-white shadow">
+          <div class="pool-details-section rounded-2xl p-6">
             <h4 class="font-bold text-gray-900 mb-4 text-lg">Wallet Balance</h4>
             <div class="space-y-3 text-sm">
               <div class="flex justify-between py-2">
@@ -621,19 +661,19 @@ window.viewDetails = async (poolId) => {
               </div>
             </div>
           </div>
-          <div class="pool-details-section rounded-2xl p-6 bg-white shadow">
+          <div class="pool-details-section rounded-2xl p-6">
             <h4 class="font-bold text-gray-900 mb-4 text-lg">Actions</h4>
-            <button id="sponsor-btn-${poolId}" class="w-full bg-blue-500 hover:bg-blue-600 text-white py-2 rounded-lg text-sm font-semibold transition-all mb-2">Sponsor whitelist Credits</button>
-            <button id="revoke-btn-${poolId}" class="w-full bg-red-500 hover:bg-red-600 text-white py-2 rounded-lg text-sm font-semibold transition-all">Revoke Credits</button>
+            <button id="sponsor-btn-${poolId}" class="w-full btn-primary py-2 rounded-lg text-sm font-semibold transition-all mb-2">Sponsor Credits</button>
+            <button id="revoke-btn-${poolId}" class="w-full btn-warning py-2 rounded-lg text-sm font-semibold transition-all">Revoke Credits</button>
           </div>
         </div>
         <div class="space-y-6">
-          <div class="pool-details-section rounded-2xl p-6 bg-white shadow">
+          <div class="pool-details-section rounded-2xl p-6">
             <h4 class="font-bold text-gray-900 mb-4 text-lg">Whitelisted Addresses (${pool.whitelist.length})</h4>
             <div class="max-h-80 overflow-y-auto space-y-2">
               ${pool.whitelist.map(address => `
-                <div class="p-3 bg-gray-50 rounded-lg border border-gray-200">
-                  <span class="text-xs font-mono text-gray-700 break-all">${address}</span>
+                <div class="address-item valid">
+                  <span class="break-all">${address}</span>
                 </div>
               `).join('')}
             </div>
@@ -643,7 +683,6 @@ window.viewDetails = async (poolId) => {
     `;
     document.getElementById('pool-details-content').innerHTML = detailsContent;
     
-    // Add event listeners to buttons
     const sponsorButton = document.getElementById(`sponsor-btn-${poolId}`);
     const revokeButton = document.getElementById(`revoke-btn-${poolId}`);
     if (sponsorButton) {
@@ -661,6 +700,7 @@ window.viewDetails = async (poolId) => {
 
 async function loadPools() {
   const poolsGrid = document.getElementById('pools-grid');
+  poolsGrid.classList.add('loading');
   try {
     const serverUrl = document.getElementById('server-url').value;
     if (!serverUrl) {
@@ -718,8 +758,8 @@ async function loadPools() {
           </div>
         </div>
         <div class="space-y-2">
-          <button onclick="viewDetails('${poolId}')" class="w-full bg-blue-500 hover:bg-blue-600 text-white py-2 rounded-lg text-sm font-semibold transition-all">View Details</button>
-          ${!isEnded ? `<button onclick="editPool('${poolId}')" class="w-full bg-gray-500 hover:bg-gray-600 text-white py-2 rounded-lg text-sm font-semibold transition-all">Edit Pool</button>` : ''}
+          <button onclick="viewDetails('${poolId}')" class="w-full btn-primary py-2 rounded-lg text-sm font-semibold transition-all">View Details</button>
+          ${!isEnded ? `<button onclick="editPool('${poolId}')" class="w-full btn-secondary py-2 rounded-lg text-sm font-semibold transition-all">Edit Pool</button>` : ''}
         </div>
       `;
       poolsGrid.appendChild(poolCard);
@@ -732,5 +772,19 @@ async function loadPools() {
   } catch (error) {
     poolsGrid.innerHTML = '<p class="col-span-full text-center text-red-600 py-8">Failed to load pools. Please try again.</p>';
     showToast('Error loading pools: ' + error.message);
+  } finally {
+    poolsGrid.classList.remove('loading');
   }
 }
+
+document.getElementById('close-edit-modal').addEventListener('click', () => {
+  document.getElementById('edit-modal').classList.add('hidden');
+  document.getElementById('edit-pool-form').reset();
+  document.getElementById('whitelist-preview-edit').innerHTML = '';
+});
+
+document.getElementById('close-create-modal').addEventListener('click', () => {
+  document.getElementById('create-modal').classList.add('hidden');
+  document.getElementById('create-pool-form').reset();
+  document.getElementById('whitelist-preview-create').innerHTML = '';
+});

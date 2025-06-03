@@ -8,7 +8,9 @@
     "start": "webpack serve",
     "build": "webpack",
     "build:sdk": "node build-sdk.js",
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "deploy": "perma-deploy --ant-process SvcHmgBgdRi4mAAcpw4zVcHnhyWGOyZWIMM3c1ABaEA --undername NityaFuel",
+    "build-and-deploy": "npm --version && npx nitya deploy"
   },
   "keywords": [],
   "author": "",
