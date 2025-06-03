@@ -10,5 +10,10 @@
   },
   "devDependencies": {
     "vite": "^6.3.5"
+  },
+  "dependencies": {
+    "@arweave-wallet-kit/browser-wallet-strategy": "^0.1.1",
+    "@arweave-wallet-kit/styles": "^0.1.1",
+    "@vela-ventures/aosync-strategy": "^1.0.12"
   }
 }

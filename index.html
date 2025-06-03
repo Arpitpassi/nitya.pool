@@ -5,7 +5,6 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Nitya Pool Manager</title>
   <script src="https://cdn.tailwindcss.com"></script>
-  <script src="https://unpkg.com/arweave-wallet-connector@1.0.2/dist/index.umd.js"></script>
   <link href="https://fonts.googleapis.com/css2?family=Urbanist:wght@400;500;600;700&family=Raleway:wght@400;500;600&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="src/styles.css">
 </head>
@@ -47,7 +46,7 @@
         <div class="glass-card rounded-2xl p-6 text-center">
           <h2 class="text-2xl font-bold mb-4 text-gray-900">Welcome to Nitya Pool Manager!</h2>
           <p id="wallet-status" class="mb-4 text-gray-600">Connect your Arweave wallet to continue</p>
-          <button id="connect-wallet" class="btn-primary px-6 py-3 rounded-xl font-semibold">Connect Wander Wallet</button>
+          <button id="connect-wallet" class="btn-primary px-6 py-3 rounded-xl font-semibold">Connect Wallet</button>
           <button id="disconnect-wallet" class="btn-secondary px-6 py-3 rounded-xl font-semibold hidden ml-4">Disconnect</button>
         </div>
       </div>
@@ -151,6 +150,7 @@
         <input type="text" id="revoke-address" placeholder="Enter wallet address to revoke" class="w-full input-field rounded-xl p-3 mb-4">
         <input type="password" id="revoke-password" placeholder="Pool Password" class="w-full input-field rounded-xl p-3 mb-4">
         <button onclick="revokeAccess()" class="w-full btn-warning py-2 rounded-lg text-sm font-semibold transition-all">Revoke Access</button>
+      </div>
       <div class="pool-details-section rounded-2xl p-6 mt-6">
         <h4 class="font-bold text-gray-900 mb-4 text-lg">Download Wallet</h4>
         <input type="password" id="download-password" placeholder="Pool Password" class="w-full input-field rounded-xl p-3 mb-4">
@@ -160,6 +160,16 @@
         <h4 class="font-bold text-gray-900 mb-4 text-lg">Delete Pool</h4>
         <button onclick="deletePoolConfirm()" class="w-full btn-delete py-2 rounded-lg text-sm font-semibold transition-all">Delete Pool</button>
       </div>
+    </div>
+  </div>
+
+  <!-- Wallet Choice Modal -->
+  <div id="wallet-choice-modal" class="backgroundLayer hidden">
+    <div class="wrapper">
+      <h2>Choose a Wallet</h2>
+      <button class="button" id="connect-browser-wallet">Connect with Browser Wallet</button>
+      <button class="button" id="connect-beacon">Connect with Beacon</button>
+      <button class="button" id="cancel-connect">Cancel</button>
     </div>
   </div>
 
