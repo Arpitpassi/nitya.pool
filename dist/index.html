@@ -81,7 +81,7 @@
         <button id="close-create-modal" class="close-btn">×</button>
       </div>
       <form id="create-pool-form" class="space-y-4">
-        <input type="hidden" id="server-url" value="https://vmi2561282.contaboserver.net">
+        <input type="hidden" id="server-url" value="http://localhost:3000">
         <input type="text" id="pool-name" placeholder="Pool Name" class="w-full input-field rounded-xl p-3" required>
         <input type="password" id="pool-password" placeholder="Pool Password" class="w-full input-field rounded-xl p-3" required>
         <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -97,8 +97,7 @@
           <div id="whitelist-preview-create" class="address-preview mt-3"></div>
         </div>
         <div>
-          <label for="sponsor-info" class="block text-sm font-medium text-gray-700 mb-2">Sponsor Information</label AZURE-DOWNLOADS-ONLY
-</label>
+          <label for="sponsor-info" class="block text-sm font-medium text-gray-700 mb-2">Sponsor Information</label>
           <textarea id="sponsor-info" rows="4" placeholder="Enter sponsor information" class="w-full input-field rounded-xl p-3 whitelist-textarea" required></textarea>
         </div>
         <div class="flex flex-col sm:flex-row sm:space-x-3 space-y-3 sm:space-y-0">
@@ -152,12 +151,6 @@
         <input type="text" id="revoke-address" placeholder="Enter wallet address to revoke" class="w-full input-field rounded-xl p-3 mb-4">
         <input type="password" id="revoke-password" placeholder="Pool Password" class="w-full input-field rounded-xl p-3 mb-4">
         <button onclick="revokeAccess()" class="w-full btn-warning py-2 rounded-lg text-sm font-semibold transition-all">Revoke Access</button>
-      </div>
-      <div class="pool-details-section rounded-2xl p-6 mt-6">
-        <h4 class="font-bold text-gray-900 mb-4 text-lg">Share Credits</h4>
-        <input type="text" id="share-address" placeholder="Enter wallet address to share credits" class="w-full input-field rounded-xl p-3 mb-4">
-        <button onclick="shareCredits()" class="w-full btn-success py-2 rounded-lg text-sm font-semibold transition-all">Share Credits</button>
-      </div>
       <div class="pool-details-section rounded-2xl p-6 mt-6">
         <h4 class="font-bold text-gray-900 mb-4 text-lg">Download Wallet</h4>
         <input type="password" id="download-password" placeholder="Pool Password" class="w-full input-field rounded-xl p-3 mb-4">
