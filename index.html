@@ -8,7 +8,6 @@
   <link rel="stylesheet" href="src/wallet-modal.css" />
   <link href="https://fonts.googleapis.com/css2?family=Urbanist:wght@400;500;600;700&family=Raleway:wght@400;500;600&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="src/styles.css">
-  
 </head>
 <body>
   <!-- Geometric Decorations -->
@@ -82,7 +81,7 @@
         <button id="close-create-modal" class="close-btn">×</button>
       </div>
       <form id="create-pool-form" class="space-y-4">
-        <input type="hidden" id="server-url" value="https://vmi2561282.contaboserver.net">
+        <input type="hidden" id="server-url" value="http://localhost:3000">
         <input type="text" id="pool-name" placeholder="Pool Name" class="w-full input-field rounded-xl p-3" required>
         <input type="password" id="pool-password" placeholder="Pool Password" class="w-full input-field rounded-xl p-3" required>
         <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -92,7 +91,7 @@
         <input type="number" id="usage-cap" step="0.000000000001" min="0" placeholder="Usage Cap (Credits)" class="w-full input-field rounded-xl p-3" required>
         <div>
           <label for="whitelist" class="block text-sm font-medium text-gray-700 mb-2">Whitelisted Addresses (one per line, 43-character Arweave addresses)</label>
-          <textarea id="whitelist" rows="4" placeholder="Enter one Arweave address per line" class="w-full input-field rounded-xl p-3 whitelist-textarea"></textarea>
+          <textarea id="whitelist" rows="4" placeholder="Enter oneArweave address per line" class="w-full input-field rounded-xl p-3 whitelist-textarea"></textarea>
           <input type="file" id="whitelist-file" accept=".json" class="mt-2">
           <p class="text-xs text-gray-500 mt-1">Enter addresses manually or upload a JSON file with an array of addresses.</p>
           <div id="whitelist-preview-create" class="address-preview mt-3"></div>
@@ -150,12 +149,10 @@
       <div class="pool-details-section rounded-2xl p-6 mt-6">
         <h4 class="font-bold text-gray-900 mb-4 text-lg">Revoke Access</h4>
         <input type="text" id="revoke-address" placeholder="Enter wallet address to revoke" class="w-full input-field rounded-xl p-3 mb-4">
-        <input type="password" id="revoke-password" placeholder="Pool Password" class="w-full input-field rounded-xl p-3 mb-4">
         <button onclick="revokeAccess()" class="w-full btn-warning py-2 rounded-lg text-sm font-semibold transition-all">Revoke Access</button>
       </div>
       <div class="pool-details-section rounded-2xl p-6 mt-6">
         <h4 class="font-bold text-gray-900 mb-4 text-lg">Download Wallet</h4>
-        <input type="password" id="download-password" placeholder="Pool Password" class="w-full input-field rounded-xl p-3 mb-4">
         <button onclick="downloadWallet()" class="w-full btn-success py-2 rounded-lg text-sm font-semibold transition-all">Download Wallet</button>
       </div>
       <div class="pool-details-section rounded-2xl p-6 mt-6">
@@ -165,14 +162,14 @@
     </div>
   </div>
 
- <div id="wallet-choice-modal" class="backgroundLayer hidden">
-  <div class="wrapper">
-    <h2 class="title">Choose a Wallet</h2>
-    <button class="button" id="connect-browser-wallet">Connect with Browser Wallet</button>
-    <button class="button" id="connect-beacon">Connect with Beacon</button>
-    <button class="button" id="cancel-connect">Cancel</button>
+  <div id="wallet-choice-modal" class="backgroundLayer hidden">
+    <div class="wrapper">
+      <h2 class="title">Choose a Wallet</h2>
+      <button class="button" id="connect-browser-wallet">Connect with Wander Wallet</button>
+      <button class="button" id="connect-beacon">Connect with Beacon</button>
+      <button class="button" id="cancel-connect">Cancel</button>
+    </div>
   </div>
-</div>
 
   <div id="toast-container" class="toast-container"></div>
 

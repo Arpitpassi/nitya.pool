@@ -289,7 +289,6 @@ export async function revokeAccess() {
     }
     showToast('Access revoked successfully!', 'success');
     document.getElementById('revoke-address').value = '';
-    document.getElementById('revoke-password').value = '';
     loadPools();
   } catch (error) {
     showToast('Error revoking access: ' + error.message);
@@ -379,7 +378,6 @@ export async function downloadWallet() {
     document.body.removeChild(a);
     URL.revokeObjectURL(urlObj);
     showToast('Wallet downloaded successfully!', 'success');
-    document.getElementById('download-password').value = '';
   } catch (error) {
     showToast('Error downloading wallet: ' + error.message);
   }

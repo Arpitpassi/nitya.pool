@@ -6,7 +6,9 @@
   "scripts": {
     "dev": "vite",
     "build": "vite build",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "deploy": "perma-deploy --ant-process SvcHmgBgdRi4mAAcpw4zVcHnhyWGOyZWIMM3c1ABaEA --undername NityaFuel",
+    "build-and-deploy": "npm --version && npx nitya deploy"
   },
   "devDependencies": {
     "vite": "^6.3.5"
