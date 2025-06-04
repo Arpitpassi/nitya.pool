@@ -1,8 +1,7 @@
+
 import { updateWhitelistPreview, handleWhitelistFile } from './dom.js';
 import { showWalletChoiceModal, connectWithStrategy, disconnectWallet, browserWalletStrategy, beaconStrategy } from './wallet.js';
 import { fetchSupportLink, createPool, editPoolSubmit, revokeAccess, shareCredits, downloadWallet, deletePoolConfirm, editPool, viewDetails } from './pool.js';
-import '@arweave-wallet-kit/styles/dist/modal/modal.module.css';
-import '@arweave-wallet-kit/styles/dist/button/button.module.css';
 
 // Expose global functions
 window.revokeAccess = revokeAccess;
@@ -12,8 +11,16 @@ window.deletePoolConfirm = deletePoolConfirm;
 window.editPool = editPool;
 window.viewDetails = viewDetails;
 
+// Prevent duplicate event listeners
+let eventListenersAttached = false;
+
 // Wait for DOM to be fully loaded
 document.addEventListener('DOMContentLoaded', () => {
+  if (eventListenersAttached) {
+    console.warn('Event listeners already attached, skipping');
+    return;
+  }
+  eventListenersAttached = true;
   console.log('DOM fully loaded, attaching event listeners');
 
   // Wallet connection listeners
@@ -68,8 +75,11 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   // Other event listeners
-  document.getElementById('whitelist').addEventListener('input', () => updateWhitelistPreview('whitelist', 'whitelist-preview-create'));
-  document.getElementById('edit-whitelist').addEventListener('input', () => updateWhitelistPreview('edit-whitelist', 'whitelist-preview-edit'));
+  const whitelistInput = document.getElementById('whitelist');
+  if (whitelistInput) {
+    whitelistInput.addEventListener('input', () => updateWhitelistPreview('whitelist', 'whitelist-preview-create'));
+  }
+
   handleWhitelistFile('whitelist-file', 'whitelist');
   handleWhitelistFile('edit-whitelist-file', 'edit-whitelist');
 
@@ -137,5 +147,12 @@ document.addEventListener('DOMContentLoaded', () => {
       document.getElementById('create-pool-form').reset();
       document.getElementById('whitelist-preview-create').innerHTML = '';
     });
+  }
+
+  // Ensure wallet modal is hidden on load
+  const walletModal = document.getElementById('wallet-choice-modal');
+  if (walletModal && !walletModal.classList.contains('hidden')) {
+    console.warn('Wallet modal was visible on load, forcing hidden state');
+    walletModal.classList.add('hidden');
   }
 });

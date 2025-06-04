@@ -5,8 +5,10 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Nitya Pool Manager</title>
   <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="src/wallet-modal.css" />
   <link href="https://fonts.googleapis.com/css2?family=Urbanist:wght@400;500;600;700&family=Raleway:wght@400;500;600&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="src/styles.css">
+  
 </head>
 <body>
   <!-- Geometric Decorations -->
@@ -163,15 +165,14 @@
     </div>
   </div>
 
-  <!-- Wallet Choice Modal -->
-  <div id="wallet-choice-modal" class="backgroundLayer hidden">
-    <div class="wrapper">
-      <h2>Choose a Wallet</h2>
-      <button class="button" id="connect-browser-wallet">Connect with Browser Wallet</button>
-      <button class="button" id="connect-beacon">Connect with Beacon</button>
-      <button class="button" id="cancel-connect">Cancel</button>
-    </div>
+ <div id="wallet-choice-modal" class="backgroundLayer hidden">
+  <div class="wrapper">
+    <h2 class="title">Choose a Wallet</h2>
+    <button class="button" id="connect-browser-wallet">Connect with Browser Wallet</button>
+    <button class="button" id="connect-beacon">Connect with Beacon</button>
+    <button class="button" id="cancel-connect">Cancel</button>
   </div>
+</div>
 
   <div id="toast-container" class="toast-container"></div>
 

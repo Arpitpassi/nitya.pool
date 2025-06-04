@@ -1,0 +1,73 @@
+/* Modal Overlay */
+#wallet-choice-modal.backgroundLayer {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+  transition: opacity 0.3s ease;
+}
+
+/* Hide modal by default */
+#wallet-choice-modal.hidden {
+  opacity: 0;
+  visibility: hidden;
+}
+
+#wallet-choice-modal:not(.hidden) {
+  opacity: 1;
+  visibility: visible;
+}
+
+/* Modal Content Wrapper */
+#wallet-choice-modal .wrapper {
+  background: white;
+  border-radius: 8px;
+  padding: 20px;
+  max-width: 400px;
+  width: 90%;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  text-align: center;
+}
+
+/* Title Styling */
+#wallet-choice-modal .title {
+  font-size: 1.5rem;
+  font-weight: bold;
+  margin-bottom: 20px;
+  color: #333;
+}
+
+/* Button Styling */
+#wallet-choice-modal .button {
+  display: block;
+  width: 100%;
+  padding: 10px;
+  margin: 10px 0;
+  background: #6f4fd8;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  font-size: 1rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background 0.2s ease;
+}
+
+#wallet-choice-modal .button:hover {
+  background: #472977;
+}
+
+/* Cancel Button Styling (Optional Differentiation) */
+#wallet-choice-modal #cancel-connect {
+  background: #e94b35;
+}
+
+#wallet-choice-modal #cancel-connect:hover {
+  background: #d43a24;
+}

@@ -12,6 +12,11 @@ export let walletAddress = null;
 export function showWalletChoiceModal() {
   const modal = document.getElementById('wallet-choice-modal');
   if (modal) {
+    if (!modal.classList.contains('hidden')) {
+      console.warn('Wallet choice modal is already visible, skipping show');
+      return;
+    }
+    console.log('Showing wallet choice modal');
     modal.classList.remove('hidden');
   } else {
     console.error('Wallet choice modal not found in DOM');
