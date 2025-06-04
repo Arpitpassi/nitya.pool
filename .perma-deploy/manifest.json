@@ -1,0 +1,30 @@
+{
+  "files": {
+    "assets/arweave-wallet-kit-BXDHS26-.js": {
+      "txId": "YhUvDAkx0c0OpKUGG_6079fRWh6Z2gQypAodI48ChOQ",
+      "hash": "6c3988fc58cdaa21cc91f208b2c845e21945e495b1f1cdcdb11e30bd141b3dd9",
+      "lastModified": "2025-06-04T01:23:04.550Z"
+    },
+    "assets/index-BR5jOzUH.css": {
+      "txId": "9JG4m_Wohq4XKMK60mzsFanY2BdRwMPmi7AnwiGXLyo",
+      "hash": "8e4c14cd7b00bda2fa2ada6a418227e5845bd1056054dff41f3665ee22be6d44",
+      "lastModified": "2025-06-04T01:23:04.563Z"
+    },
+    "assets/index-BhJKuJpK.js": {
+      "txId": "OyE83QAbXJwzvJFB8k_X3niQ2AOYnf5sQ1GuMzS3mdQ",
+      "hash": "c7bd85221dce781f4ddc81be3d2298a487327e6689f2e2f1bb1f5e81822e2db4",
+      "lastModified": "2025-06-04T01:23:04.571Z"
+    },
+    "assets/vendor-BJKwa82_.js": {
+      "txId": "V2pPtT-fVMXaxqWKi3TvZwAqxoagGDEwKAilcXy19uE",
+      "hash": "ea347ef9d68ae07c7c67deed72b4a841805432397f5ab13d6e9effc9e62c2f1d",
+      "lastModified": "2025-06-04T01:23:04.603Z"
+    },
+    "index.html": {
+      "txId": "tOo4zhnA--A6EsfVctHrtzRF8vJWPapxo0qJnNIbp1A",
+      "hash": "1aaec9906dc7452f7cb2297c6d507865f68c9c61faf0bf0281858a7d35de78bc",
+      "lastModified": "2025-06-04T01:27:57.044Z"
+    }
+  },
+  "lastManifestId": "xBvngecLp8a-TtWUjwQXarFdtsngMUaC-dft45uqLrM"
+}
