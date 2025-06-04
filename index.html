@@ -81,7 +81,7 @@
         <button id="close-create-modal" class="close-btn">×</button>
       </div>
       <form id="create-pool-form" class="space-y-4">
-        <input type="hidden" id="server-url" value="https://vmi2561282.contaboserver.net">
+        <input type="hidden" id="server-url" value="http://localhost:3000">
         <input type="text" id="pool-name" placeholder="Pool Name" class="w-full input-field rounded-xl p-3" required>
         <input type="password" id="pool-password" placeholder="Pool Password" class="w-full input-field rounded-xl p-3" required>
         <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -165,8 +165,8 @@
   <div id="wallet-choice-modal" class="backgroundLayer hidden">
     <div class="wrapper">
       <h2 class="title">Choose a Wallet</h2>
-      <button class="button" id="connect-browser-wallet">Connect with Wander Wallet</button>
       <button class="button" id="connect-beacon">Connect with Beacon</button>
+      <button class="button" id="connect-browser-wallet">Connect with Wander Wallet</button>
       <button class="button" id="cancel-connect">Cancel</button>
     </div>
   </div>
@@ -176,4 +176,4 @@
   <script type="module" src="src/main.js"></script>
 </body>
 </html>
-ver.0.0.9
+ver.0.0.10
