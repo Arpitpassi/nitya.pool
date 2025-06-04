@@ -1,7 +1,7 @@
 
 import { updateWhitelistPreview, handleWhitelistFile } from './dom.js';
 import { showWalletChoiceModal, connectWithStrategy, disconnectWallet, browserWalletStrategy, beaconStrategy } from './wallet.js';
-import { fetchSupportLink, createPool, editPoolSubmit, revokeAccess, shareCredits, downloadWallet, deletePoolConfirm, editPool, viewDetails } from './pool.js';
+import { createPool, editPoolSubmit, revokeAccess, shareCredits, downloadWallet, deletePoolConfirm, editPool, viewDetails } from './pool.js';
 
 // Expose global functions
 window.revokeAccess = revokeAccess;
@@ -85,7 +85,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
   const supportBtn = document.getElementById('support-btn');
   if (supportBtn) {
-    supportBtn.addEventListener('click', fetchSupportLink);
+    supportBtn.addEventListener('click');
   }
 
   const createPoolBtn = document.getElementById('create-pool-btn');
