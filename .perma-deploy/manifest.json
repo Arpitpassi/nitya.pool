@@ -21,10 +21,15 @@
       "lastModified": "2025-06-04T01:23:04.603Z"
     },
     "index.html": {
-      "txId": "tOo4zhnA--A6EsfVctHrtzRF8vJWPapxo0qJnNIbp1A",
-      "hash": "1aaec9906dc7452f7cb2297c6d507865f68c9c61faf0bf0281858a7d35de78bc",
-      "lastModified": "2025-06-04T01:27:57.044Z"
+      "txId": "pNmhxyM4LB1eeiiLzYF-N2t13tYKkPSV_mTMEmqacGk",
+      "hash": "bf362c8f537b40a723addb65b20c00efb8016e2c2d06a9445b551a7ddc1d7176",
+      "lastModified": "2025-06-04T01:46:03.329Z"
+    },
+    "assets/index-BVE1bMWH.js": {
+      "txId": "w5OCHiMAgHmyw9UQ_CLgdKCOFonJXlQGSgYGTXIDhu4",
+      "hash": "6605a9ff0f6194f2ca27efcd7a90ae8779d801054ed9cdcb4146ecbfaa8eea8a",
+      "lastModified": "2025-06-04T01:46:03.329Z"
     }
   },
-  "lastManifestId": "xBvngecLp8a-TtWUjwQXarFdtsngMUaC-dft45uqLrM"
+  "lastManifestId": "O1UfDZSrOe45tXeMWDqIqv823sB5VO3aP38z3cPBsWw"
 }
