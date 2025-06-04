@@ -532,11 +532,17 @@ export async function viewDetails(poolId) {
     document.getElementById('pool-details-content').innerHTML = detailsContent;
     const sponsorButton = document.getElementById(`sponsor-btn-${poolId}`);
     const revokeButton = document.getElementById(`revoke-btn-${poolId}`);
+    const closeButton = document.getElementById('close-details');
     if (sponsorButton) {
       sponsorButton.addEventListener('click', () => sponsorCredits(poolId));
     }
     if (revokeButton) {
       revokeButton.addEventListener('click', () => revokeCredits(poolId));
+    }
+    if (closeButton) {
+      closeButton.addEventListener('click', () => {
+        document.getElementById('details-modal').classList.add('hidden');
+      });
     }
     document.getElementById('details-modal').classList.remove('hidden');
   } catch (error) {
@@ -622,3 +628,63 @@ export async function loadPools() {
     poolsGrid.classList.remove('loading');
   }
 }
+
+// Initialize event listeners for static buttons
+function initializeModalListeners() {
+  const createPoolBtn = document.getElementById('create-pool-btn');
+  const closeCreateModal = document.getElementById('close-create-modal');
+  const cancelCreate = document.getElementById('cancel-create');
+  const createSubmitBtn = document.getElementById('create-submit-btn');
+  const closeEditModal = document.getElementById('close-edit-modal');
+  const cancelEdit = document.getElementById('cancel-edit');
+  const editSubmitBtn = document.getElementById('edit-submit-btn');
+
+  if (createPoolBtn) {
+    createPoolBtn.addEventListener('click', () => {
+      document.getElementById('create-modal').classList.remove('hidden');
+      document.getElementById('create-pool-form').reset();
+      document.getElementById('whitelist-preview-create').innerHTML = '';
+    });
+  }
+  if (closeCreateModal) {
+    closeCreateModal.addEventListener('click', () => {
+      document.getElementById('create-modal').classList.add('hidden');
+      document.getElementById('create-pool-form').reset();
+      document.getElementById('whitelist-preview-create').innerHTML = '';
+    });
+  }
+  if (cancelCreate) {
+    cancelCreate.addEventListener('click', () => {
+      document.getElementById('create-modal').classList.add('hidden');
+      document.getElementById('create-pool-form').reset();
+      document.getElementById('whitelist-preview-create').innerHTML = '';
+    });
+  }
+  if (createSubmitBtn) {
+    createSubmitBtn.addEventListener('click', (event) => {
+      createPool(event);
+    });
+  }
+  if (closeEditModal) {
+    closeEditModal.addEventListener('click', () => {
+      document.getElementById('edit-modal').classList.add('hidden');
+      document.getElementById('edit-pool-form').reset();
+      document.getElementById('whitelist-preview-edit').innerHTML = '';
+    });
+  }
+  if (cancelEdit) {
+    cancelEdit.addEventListener('click', () => {
+      document.getElementById('edit-modal').classList.add('hidden');
+      document.getElementById('edit-pool-form').reset();
+      document.getElementById('whitelist-preview-edit').innerHTML = '';
+    });
+  }
+  if (editSubmitBtn) {
+    editSubmitBtn.addEventListener('click', (event) => {
+      editPoolSubmit(event);
+    });
+  }
+}
+
+// Run initialization when the DOM is fully loaded
+document.addEventListener('DOMContentLoaded', initializeModalListeners);
