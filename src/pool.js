@@ -23,8 +23,13 @@ export async function fetchSupportLink() {
 export async function createPool(event) {
   event.preventDefault();
   const poolPassword = document.getElementById('pool-password').value;
+  const confirmPassword = document.getElementById('pool-password-confirm').value;
   if (!poolPassword) {
     showToast('Pool password is required.');
+    return;
+  }
+  if (poolPassword !== confirmPassword) {
+    showToast('Passwords do not match.');
     return;
   }
   const addresses = document.getElementById('whitelist').value.split('\n').map(a => a.trim()).filter(a => a);
