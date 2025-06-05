@@ -7,7 +7,7 @@
     "dev": "vite",
     "build": "vite build --base ./",
     "preview": "vite preview",
-    "deploy": "perma-deploy --ant-process SvcHmgBgdRi4mAAcpw4zVcHnhyWGOyZWIMM3c1ABaEA --undername nityapool",
+    "deploy": "perma-deploy --ant-process SvcHmgBgdRi4mAAcpw4zVcHnhyWGOyZWIMM3c1ABaEA --undername nitya-pools.v0",
     "build-and-deploy": "npm --version && npx nitya deploy"
   },
   "devDependencies": {

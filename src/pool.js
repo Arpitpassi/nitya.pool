@@ -691,5 +691,5 @@ function initializeModalListeners() {
   }
 }
 
-// Run initialization when the DOM is fully loaded
+// Run initialization when the DOM full loadeds
 document.addEventListener('DOMContentLoaded', initializeModalListeners);
