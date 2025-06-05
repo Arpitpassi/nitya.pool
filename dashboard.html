@@ -1,0 +1,750 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Nitya Pool Manager - Dashboard</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          colors: {
+            primary: {
+              50: '#f0f9ff',
+              500: '#3b82f6',
+              600: '#2563eb',
+              700: '#1d4ed8',
+              900: '#1e3a8a'
+            }
+          },
+          fontFamily: {
+            mono: ['JetBrains Mono', 'Consolas', 'Monaco', 'monospace']
+          }
+        }
+      }
+    }
+  </script>
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="src/new-styles.css">
+  <link rel="stylesheet" href="src/wallet-modal.css">
+  <!-- Wallet Strategy Dependencies -->
+  <script src="https://unpkg.com/@arweave-wallet-kit/browser-wallet-strategy"></script>
+  <script src="https://unpkg.com/@vela-ventures/aosync-strategy"></script>
+  <style>
+    * {
+      font-family: 'JetBrains Mono', monospace;
+    }
+    
+    body {
+      background: #ffffff;
+      color: #000000;
+      margin: 0;
+      padding: 0;
+    }
+    
+    .main-container {
+      display: flex;
+      height: 100vh;
+      background: #ffffff;
+    }
+    
+    /* Left Sidebar - Pools */
+    .pools-sidebar {
+      width: 300px;
+      background: #ffffff;
+      border-right: 2px solid #000000;
+      padding: 20px;
+      overflow-y: auto;
+    }
+    
+    .pools-sidebar h2 {
+      font-size: 18px;
+      font-weight: 700;
+      margin-bottom: 20px;
+      color: #000000;
+      border-bottom: 2px solid #000000;
+      padding-bottom: 10px;
+    }
+    
+    .create-pool-btn {
+      width: 100%;
+      background: #000000;
+      color: #ffffff;
+      border: none;
+      padding: 12px;
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+      margin-bottom: 20px;
+      transition: all 0.2s;
+    }
+    
+    .create-pool-btn:hover {
+      background: #333333;
+    }
+    
+    .pool-item {
+      background: #ffffff;
+      border: 2px solid #000000;
+      padding: 15px;
+      margin-bottom: 10px;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    
+    .pool-item:hover {
+      background: #f5f5f5;
+    }
+    
+    .pool-item.active {
+      background: #000000;
+      color: #ffffff;
+    }
+    
+    .pool-item.active .pool-status.active {
+      color: #22c55e;
+    }
+    
+    .pool-item.active .pool-status.inactive {
+      color: #ef4444;
+    }
+    
+    .pool-name {
+      font-size: 16px;
+      font-weight: 600;
+      margin-bottom: 5px;
+    }
+    
+    .pool-status {
+      font-size: 12px;
+      font-weight: 500;
+      text-transform: uppercase;
+    }
+    
+    .pool-status.active {
+      color: #22c55e;
+    }
+    
+    .pool-status.inactive {
+      color: #ef4444;
+    }
+    
+    .pool-id {
+      font-size: 10px;
+      color: #999999;
+      margin-top: 5px;
+      font-family: 'JetBrains Mono', monospace;
+    }
+    
+    .pool-item.active .pool-id {
+      color: #cccccc;
+    }
+    
+    /* Main Content Area */
+    .main-content {
+      flex: 1;
+      padding: 20px;
+      overflow-y: auto;
+    }
+    
+    /* Wallet Section */
+    .wallet-section {
+      background: #ffffff;
+      border: 2px solid #000000;
+      padding: 30px;
+      text-align: center;
+      margin-bottom: 20px;
+    }
+    
+    .wallet-title {
+      font-size: 24px;
+      font-weight: 700;
+      margin-bottom: 15px;
+      color: #000000;
+    }
+    
+    .wallet-status {
+      font-size: 16px;
+      margin-bottom: 20px;
+      color: #666666;
+    }
+    
+    .connect-btn, .disconnect-btn {
+      background: #000000;
+      color: #ffffff;
+      border: none;
+      padding: 12px 24px;
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+      margin: 0 10px;
+      transition: all 0.2s;
+    }
+    
+    .connect-btn:hover, .disconnect-btn:hover {
+      background: #333333;
+    }
+    
+    .disconnect-btn {
+      background: #ef4444;
+    }
+    
+    .disconnect-btn:hover {
+      background: #dc2626;
+    }
+    
+    /* Pool Details */
+    .pool-details {
+      background: #ffffff;
+      border: 2px solid #000000;
+      padding: 30px;
+      position: relative;
+    }
+    
+    .edit-pool-btn {
+      position: absolute;
+      top: 20px;
+      right: 20px;
+      background: #000000;
+      color: #ffffff;
+      border: none;
+      padding: 8px 16px;
+      font-size: 12px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    
+    .edit-pool-btn:hover {
+      background: #333333;
+    }
+    
+    .pool-details-section {
+      background: #ffffff;
+      border: 2px solid #000000;
+      padding: 20px;
+      margin-bottom: 20px;
+    }
+    
+    .detail-section {
+      margin-bottom: 25px;
+      padding-bottom: 20px;
+      border-bottom: 1px solid #e5e5e5;
+    }
+    
+    .detail-section:last-child {
+      border-bottom: none;
+    }
+    
+    .detail-title {
+      font-size: 16px;
+      font-weight: 700;
+      margin-bottom: 10px;
+      color: #000000;
+    }
+    
+    .detail-value {
+      font-size: 14px;
+      color: #666666;
+      word-break: break-all;
+    }
+    
+    .detail-actions {
+      background: #f5f5f5;
+      border: 1px solid #e5e5e5;
+      padding: 20px;
+      margin-top: 20px;
+    }
+    
+    .action-section {
+      margin-bottom: 20px;
+      padding-bottom: 15px;
+      border-bottom: 1px solid #ddd;
+    }
+    
+    .action-section:last-child {
+      border-bottom: none;
+      margin-bottom: 0;
+    }
+    
+    .action-title {
+      font-size: 14px;
+      font-weight: 700;
+      margin-bottom: 10px;
+      color: #000000;
+    }
+    
+    .action-input {
+      width: 100%;
+      padding: 10px;
+      border: 2px solid #000000;
+      background: #ffffff;
+      font-size: 14px;
+      font-family: 'JetBrains Mono', monospace;
+      margin-bottom: 10px;
+    }
+    
+    .action-button {
+      width: 100%;
+      padding: 10px;
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s;
+      border: none;
+      font-family: 'JetBrains Mono', monospace;
+    }
+    
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 20px;
+      margin-bottom: 25px;
+    }
+    
+    .stat-box {
+      background: #ffffff;
+      border: 2px solid #000000;
+      padding: 20px;
+      text-align: center;
+    }
+    
+    .stat-number {
+      font-size: 24px;
+      font-weight: 700;
+      color: #000000;
+      margin-bottom: 5px;
+    }
+    
+    .stat-label {
+      font-size: 12px;
+      color: #666666;
+      text-transform: uppercase;
+      font-weight: 600;
+    }
+    
+    /* Modals */
+    .modal-overlay {
+      background: rgba(0, 0, 0, 0.8);
+    }
+    
+    .modal-content {
+      background: #ffffff;
+      border: 3px solid #000000;
+      max-width: 600px;
+      width: 100%;
+      max-height: 90vh;
+      overflow-y: auto;
+    }
+    
+    .modal-title {
+      font-size: 20px;
+      font-weight: 700;
+      margin-bottom: 20px;
+      color: #000000;
+    }
+    
+    .form-group {
+      margin-bottom: 20px;
+    }
+    
+    .form-label {
+      display: block;
+      font-size: 14px;
+      font-weight: 600;
+      margin-bottom: 8px;
+      color: #000000;
+    }
+    
+    .form-input, .form-textarea {
+      width: 100%;
+      padding: 12px;
+      border: 2px solid #000000;
+      background: #ffffff;
+      font-size: 14px;
+      font-family: 'JetBrains Mono', monospace;
+    }
+    
+    .form-input:focus, .form-textarea:focus {
+      outline: none;
+      border-color: #0066cc;
+    }
+    
+    .form-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 15px;
+    }
+    
+    .btn-primary, .btn-secondary, .btn-warning, .btn-success, .btn-delete {
+      padding: 12px 24px;
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s;
+      border: none;
+      font-family: 'JetBrains Mono', monospace;
+    }
+    
+    .btn-primary {
+      background: #000000;
+      color: #ffffff;
+    }
+    
+    .btn-primary:hover {
+      background: #333333;
+    }
+    
+    .btn-secondary {
+      background: #ffffff;
+      color: #000000;
+      border: 2px solid #000000;
+    }
+    
+    .btn-secondary:hover {
+      background: #f5f5f5;
+    }
+    
+    .btn-warning {
+      background: #f59e0b;
+      color: #ffffff;
+    }
+    
+    .btn-warning:hover {
+      background: #d97706;
+    }
+    
+    .btn-success {
+      background: #22c55e;
+      color: #ffffff;
+    }
+    
+    .btn-success:hover {
+      background: #16a34a;
+    }
+    
+    .btn-delete {
+      background: #ef4444;
+      color: #ffffff;
+    }
+    
+    .btn-delete:hover {
+      background: #dc2626;
+    }
+    
+    .close-btn {
+      position: absolute;
+      top: 15px;
+      right: 20px;
+      background: none;
+      border: none;
+      font-size: 24px;
+      cursor: pointer;
+      color: #000000;
+    }
+    
+    .close-btn:hover {
+      color: #666666;
+    }
+    
+    .hidden {
+      display: none !important;
+    }
+    
+    .address-preview {
+      background: #f5f5f5;
+      border: 1px solid #e5e5e5;
+      padding: 10px;
+      font-size: 12px;
+      max-height: 100px;
+      overflow-y: auto;
+    }
+    
+    /* Toast notifications */
+    .toast-container {
+      position: fixed;
+      top: 20px;
+      right: 20px;
+      z-index: 1000;
+    }
+    
+    .toast {
+      background: #000000;
+      color: #ffffff;
+      padding: 12px 20px;
+      margin-bottom: 10px;
+      font-size: 14px;
+      border: 2px solid #000000;
+    }
+    
+    .toast.success {
+      background: #22c55e;
+      border-color: #22c55e;
+    }
+    
+    .toast.error {
+      background: #ef4444;
+      border-color: #ef4444;
+    }
+    
+    /* Wallet modal styles */
+    .backgroundLayer {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0, 0, 0, 0.8);
+      z-index: 1000;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    
+    .wrapper {
+      background: #ffffff;
+      border: 3px solid #000000;
+      padding: 30px;
+      min-width: 300px;
+      text-align: center;
+    }
+    
+    .title {
+      font-size: 18px;
+      font-weight: 700;
+      margin-bottom: 20px;
+      color: #000000;
+    }
+    
+    .button {
+      width: 100%;
+      background: #000000;
+      color: #ffffff;
+      border: none;
+      padding: 12px;
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+      margin-bottom: 10px;
+      transition: all 0.2s;
+      font-family: 'JetBrains Mono', monospace;
+    }
+    
+    .button:hover {
+      background: #333333;
+    }
+    
+    .button:last-child {
+      background: #ffffff;
+      color: #000000;
+      border: 2px solid #000000;
+    }
+    
+    .button:last-child:hover {
+      background: #f5f5f5;
+    }
+  </style>
+</head>
+<body>
+  <!-- Toast Container -->
+  <div id="toast-container" class="toast-container"></div>
+
+  <div class="main-container">
+    <!-- Left Sidebar - Pools List -->
+    <div class="pools-sidebar">
+      <h2>POOLS</h2>
+      <button id="create-pool-btn" class="create-pool-btn">+ NEW POOL</button>
+      <div id="pools-grid">
+        <!-- Pool items will be dynamically added here -->
+      </div>
+    </div>
+
+    <!-- Main Content -->
+    <div class="main-content">
+      <!-- Wallet Section -->
+      <div id="wallet-section" class="wallet-section">
+        <h2 class="wallet-title">NITYA POOL MANAGER</h2>
+        <p id="wallet-status" class="wallet-status">Connect your Arweave wallet to continue</p>
+        <button id="connect-wallet" class="connect-btn">CONNECT WALLET</button>
+        <button id="disconnect-wallet" class="disconnect-btn hidden">DISCONNECT</button>
+      </div>
+
+      <!-- Dashboard Content -->
+      <div id="dashboard" class="hidden">
+        <!-- Stats Grid -->
+        <div class="stats-grid">
+          <div class="stat-box">
+            <div id="total-pools" class="stat-number">0</div>
+            <div class="stat-label">Total Pools</div>
+          </div>
+          <div class="stat-box">
+            <div id="active-pools" class="stat-number">0</div>
+            <div class="stat-label">Active Pools</div>
+          </div>
+        </div>
+
+        <!-- Pool Details -->
+        <div id="pool-details" class="pool-details hidden">
+          <button id="edit-pool-btn" class="edit-pool-btn">EDIT</button>
+          <div id="pool-details-content">
+            <!-- Pool details will be populated here by your JS -->
+          </div>
+        </div>
+
+        <!-- Default message when no pool selected -->
+        <div id="no-pool-selected" class="pool-details">
+          <div class="detail-title">YOUR DEPLOYMENT POOLS</div>
+          <div class="detail-value">Your pools will appear in the sidebar once loaded. Select a pool to view its details.</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Wallet Choice Modal -->
+  <div id="wallet-choice-modal" class="backgroundLayer hidden">
+    <div class="wrapper">
+      <h2 class="title">CHOOSE WALLET</h2>
+      <button class="button" id="connect-beacon">CONNECT WITH BEACON</button>
+      <button class="button" id="connect-browser-wallet">CONNECT WITH WANDER</button>
+      <button class="button" id="cancel-connect">CANCEL</button>
+    </div>
+  </div>
+
+  <!-- Create Pool Modal -->
+  <div id="create-modal" class="fixed inset-0 modal-overlay hidden z-50 flex items-center justify-center p-4">
+    <div class="modal-content p-8 relative">
+      <button id="close-create-modal" class="close-btn">×</button>
+      <h3 class="modal-title">CREATE NEW POOL</h3>
+      <form id="create-pool-form">
+        <input type="hidden" id="server-url" value="https://vmi2561282.contaboserver.net">
+        
+        <div class="form-group">
+          <label class="form-label">POOL NAME</label>
+          <input type="text" id="pool-name" class="form-input" required>
+        </div>
+        
+        <div class="form-group">
+          <label class="form-label">POOL PASSWORD</label>
+          <input type="password" id="pool-password" class="form-input" required>
+        </div>
+        
+        <div class="form-group">
+          <label class="form-label">CONFIRM PASSWORD</label>
+          <input type="password" id="pool-password-confirm" class="form-input" required>
+        </div>
+        
+        <div class="form-group">
+          <div class="form-grid">
+            <div>
+              <label class="form-label">START TIME</label>
+              <input type="datetime-local" id="start-time" class="form-input" required>
+            </div>
+            <div>
+              <label class="form-label">END TIME</label>
+              <input type="datetime-local" id="end-time" class="form-input" required>
+            </div>
+          </div>
+        </div>
+        
+        <div class="form-group">
+          <label class="form-label">USAGE CAP (CREDITS)</label>
+          <input type="number" id="usage-cap" step="0.000000000001" min="0" class="form-input" required>
+        </div>
+        
+        <div class="form-group">
+          <label class="form-label">WHITELISTED ADDRESSES</label>
+          <textarea id="whitelist" rows="4" placeholder="Enter one Arweave address per line" class="form-textarea"></textarea>
+          <input type="file" id="whitelist-file" accept=".json" style="margin-top: 10px;">
+          <p style="font-size: 12px; color: #666; margin-top: 5px;">Enter addresses manually or upload JSON file</p>
+          <div id="whitelist-preview-create" class="address-preview" style="margin-top: 10px;"></div>
+        </div>
+        
+        <div class="form-group">
+          <label class="form-label">SPONSOR INFORMATION</label>
+          <textarea id="sponsor-info" rows="4" class="form-textarea" required></textarea>
+        </div>
+        
+        <div style="display: flex; gap: 15px;">
+          <button type="submit" id="create-submit-btn" class="btn-primary" style="flex: 1;">CREATE POOL</button>
+          <button type="button" id="cancel-create" class="btn-secondary">CANCEL</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Edit Pool Modal -->
+  <div id="edit-modal" class="fixed inset-0 modal-overlay hidden z-50 flex items-center justify-center p-4">
+    <div class="modal-content p-8 relative">
+      <button id="close-edit-modal" class="close-btn">×</button>
+      <h3 class="modal-title">EDIT POOL</h3>
+      <form id="edit-pool-form">
+        <input type="hidden" id="edit-pool-id">
+        
+        <div class="form-group">
+          <label class="form-label">POOL PASSWORD</label>
+          <input type="password" id="edit-pool-password" class="form-input" required>
+        </div>
+        
+        <div class="form-group">
+          <div class="form-grid">
+            <div>
+              <label class="form-label">START TIME</label>
+              <input type="datetime-local" id="edit-start-time" class="form-input">
+            </div>
+            <div>
+              <label class="form-label">END TIME</label>
+              <input type="datetime-local" id="edit-end-time" class="form-input">
+            </div>
+          </div>
+        </div>
+        
+        <div class="form-group">
+          <label class="form-label">USAGE CAP</label>
+          <input type="number" id="edit-usage-cap" step="0.000000000001" min="0" class="form-input">
+        </div>
+        
+        <div class="form-group">
+          <label class="form-label">WHITELISTED ADDRESSES</label>
+          <textarea id="edit-whitelist" rows="4" placeholder="Enter one Arweave address per line" class="form-textarea"></textarea>
+          <input type="file" id="edit-whitelist-file" accept=".json" style="margin-top: 10px;">
+          <p style="font-size: 12px; color: #666; margin-top: 5px;">Enter addresses manually or upload JSON file</p>
+          <div id="whitelist-preview-edit" class="address-preview" style="margin-top: 10px;"></div>
+        </div>
+        
+        <div style="display: flex; gap: 15px;">
+          <button type="submit" id="edit-submit-btn" class="btn-primary" style="flex: 1;">UPDATE POOL</button>
+          <button type="button" id="cancel-edit" class="btn-secondary">CANCEL</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- View Details Modal (reduced - most content now shows in main area) -->
+  <div id="details-modal" class="fixed inset-0 modal-overlay hidden z-50 flex items-center justify-center p-4">
+    <div class="modal-content p-8 relative" style="max-width: 500px;">
+      <button id="close-details" class="close-btn">×</button>
+      <h3 class="modal-title">ADDITIONAL ACTIONS</h3>
+      
+      <div class="detail-section">
+        <div class="detail-title">REVOKE ACCESS</div>
+        <input type="text" id="revoke-address" placeholder="Enter wallet address to revoke" class="form-input" style="margin-bottom: 15px;">
+        <button onclick="revokeAccess()" class="btn-warning" style="width: 100%;">REVOKE ACCESS</button>
+      </div>
+      
+      <div class="detail-section">
+        <div class="detail-title">DOWNLOAD WALLET</div>
+        <button onclick="downloadWallet()" class="btn-success" style="width: 100%;">DOWNLOAD WALLET</button>
+      </div>
+      
+      <div class="detail-section">
+        <div class="detail-title">DELETE POOL</div>
+        <button onclick="deletePoolConfirm()" class="btn-delete" style="width: 100%;">DELETE POOL</button>
+      </div>
+    </div>
+  </div>
+
+  <script type="module" src="src/main.js"></script>
+</body>
+</html>
