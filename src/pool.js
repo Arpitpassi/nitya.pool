@@ -447,6 +447,8 @@ export function editPool(poolId) {
   updateWhitelistPreview('edit-whitelist', 'whitelist-preview-edit');
 }
 
+
+ 
 export async function viewDetails(poolId) {
   const pool = poolDataMap.get(poolId);
   if (!pool) {
@@ -470,6 +472,12 @@ export async function viewDetails(poolId) {
     const isEnded = now > endTime;
     const statusText = isEnded ? 'Ended' : 'Active';
     const statusColor = isEnded ? 'text-red-600' : 'text-green-600';
+
+    // Clear previous content to ensure fresh render
+    document.getElementById('pool-details-content').innerHTML = '';
+    document.getElementById('pool-details').classList.add('hidden');
+    document.getElementById('no-pool-selected').classList.add('hidden');
+
     // Populate pool-details-content with pool info and actions
     const detailsContent = `
       <div class="detail-section">
@@ -512,7 +520,7 @@ export async function viewDetails(poolId) {
             </div>
           </div>
         </div>
-        <div class="flex justify-start gap-4 mt-4">
+        <div class="flex justify-end gap-4 mt-4">
           <button id="sponsor-btn-${poolId}" class="py-1 px-4 text-sm font-semibold text-white bg-yellow-500 hover:bg-yellow-600 rounded-lg transition-all">SPONSOR CREDITS</button>
           <button id="revoke-btn-${poolId}" class="py-1 px-4 text-sm font-semibold text-white bg-red-500 hover:bg-red-600 rounded-lg transition-all">REVOKE CREDITS</button>
         </div>
@@ -548,8 +556,11 @@ export async function viewDetails(poolId) {
     }
   } catch (error) {
     showToast('Error loading pool details: ' + error.message);
+    document.getElementById('pool-details').classList.add('hidden');
+    document.getElementById('no-pool-selected').classList.remove('hidden');
   }
 }
+
 
 export async function loadPools() {
   const poolsGrid = document.getElementById('pools-grid');
@@ -585,8 +596,9 @@ export async function loadPools() {
       if (!isEnded) activePools++;
       const statusColor = isEnded ? 'bg-red-100 text-red-600' : 'bg-blue-100 text-blue-600';
       const statusText = isEnded ? 'Ended' : 'Active';
+      const isActive = poolId === currentEditPoolId ? 'active' : ''; // Add active class if this is the current pool
       const poolCard = document.createElement('div');
-      poolCard.className = 'pool-card p-6 bg-white shadow rounded-2xl';
+      poolCard.className = `pool-card p-6 bg-white shadow rounded-2xl ${isActive}`;
       poolCard.innerHTML = `
         <div class="flex justify-between items-start mb-4">
           <h3 class="text-xl font-bold text-gray-900">${pool.name}</h3>
