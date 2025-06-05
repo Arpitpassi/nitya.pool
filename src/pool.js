@@ -210,11 +210,6 @@ export async function revokeCredits(poolId) {
       showToast('Server URL is missing.');
       return;
     }
-    const password = prompt('Enter the pool password to revoke credits:');
-    if (!password) {
-      showToast('Password required to revoke credits.');
-      return;
-    }
     const revokeButton = document.getElementById(`revoke-btn-${poolId}`);
     if (revokeButton) {
       revokeButton.disabled = true;
@@ -222,6 +217,11 @@ export async function revokeCredits(poolId) {
     }
     let revokedCount = 0;
     for (const walletAddress of pool.whitelist) {
+      const password = prompt(`Enter the pool password to revoke credits for ${walletAddress}:`);
+      if (!password) {
+        showToast(`Password required to revoke credits for ${walletAddress}.`);
+        continue;
+      }
       try {
         const url = new URL(`${serverUrl}/pool/${encodeURIComponent(poolId)}/revoke`);
         url.searchParams.append('password', password);
@@ -282,23 +282,56 @@ export async function revokeAccess() {
       showToast('Server URL is missing.');
       return;
     }
-    const url = new URL(`${serverUrl}/pool/${encodeURIComponent(currentEditPoolId)}/revoke`);
-    url.searchParams.append('password', password);
-    url.searchParams.append('creatorAddress', walletAddress);
-    const response = await fetch(url, {
+    // Step 1: Revoke access
+    const revokeUrl = new URL(`${serverUrl}/pool/${encodeURIComponent(currentEditPoolId)}/revoke`);
+    revokeUrl.searchParams.append('password', password);
+    revokeUrl.searchParams.append('creatorAddress', walletAddress);
+    const revokeResponse = await fetch(revokeUrl, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', 'X-API-Key': DEPLOY_API_KEY },
       body: JSON.stringify({ walletAddress: walletAddressInput })
     });
-    const result = await response.json();
-    if (!response.ok) {
-      throw new Error(`${result.error || 'Failed to revoke access'} (${result.code || 'UNKNOWN_ERROR'})`);
+    const revokeResult = await revokeResponse.json();
+    if (!revokeResponse.ok) {
+      throw new Error(`${revokeResult.error || 'Failed to revoke access'} (${revokeResult.code || 'UNKNOWN_ERROR'})`);
     }
-    showToast('Access revoked successfully!', 'success');
+    // Step 2: Fetch current pool data to get the latest whitelist
+    const poolResponse = await fetch(`${serverUrl}/pools?creatorAddress=${encodeURIComponent(walletAddress)}`, {
+      headers: { 'X-API-Key': DEPLOY_API_KEY }
+    });
+    if (!poolResponse.ok) {
+      const errorData = await poolResponse.json();
+      throw new Error(`${errorData.error || 'Failed to fetch pool data'} (${errorData.code || 'UNKNOWN_ERROR'})`);
+    }
+    const pools = await poolResponse.json();
+    const pool = pools[currentEditPoolId];
+    if (!pool) {
+      throw new Error('Pool data not found after revoking access.');
+    }
+    // Step 3: Update whitelist by removing the revoked address
+    const updatedWhitelist = pool.whitelist.filter(addr => addr !== walletAddressInput);
+    const updates = { whitelist: updatedWhitelist };
+    const editUrl = new URL(`${serverUrl}/pool/${encodeURIComponent(currentEditPoolId)}/edit`);
+    editUrl.searchParams.append('password', password);
+    editUrl.searchParams.append('creatorAddress', walletAddress);
+    const editResponse = await fetch(editUrl, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json', 'X-API-Key': DEPLOY_API_KEY },
+      body: JSON.stringify(updates)
+    });
+    const editResult = await editResponse.json();
+    if (!editResponse.ok) {
+      throw new Error(`${editResult.error || 'Failed to update whitelist'} (${editResult.code || 'UNKNOWN_ERROR'})`);
+    }
+    // Step 4: Update local poolDataMap
+    poolDataMap.set(currentEditPoolId, { ...pool, whitelist: updatedWhitelist });
+    // Step 5: Clear input and refresh UI
     document.getElementById('revoke-address').value = '';
     loadPools();
+    reloadPoolDetails(currentEditPoolId);
+    showToast('Access revoked and address removed from whitelist successfully!', 'success');
   } catch (error) {
-    showToast('Error revoking access: ' + error.message);
+    showToast('Error revoking access or updating whitelist: ' + error.message);
   }
 }
 
@@ -532,7 +565,6 @@ export async function reloadPoolDetails(poolId) {
         <div class="flex justify-end gap-4 mt-4">
           ${!isEnded ? `<button onclick="editPool('${poolId}')" class="py-1 px-4 text-sm font-semibold text-white bg-blue-500 hover:bg-blue-600 rounded-lg transition-all">EDIT POOL</button>` : ''}
           <button id="sponsor-btn-${poolId}" class="py-1 px-4 text-sm font-semibold text-white bg-yellow-500 hover:bg-yellow-600 rounded-lg transition-all">SPONSOR CREDITS</button>
-          <button id="revoke-btn-${poolId}" class="py-1 px-4 text-sm font-semibold text-white bg-red-500 hover:bg-red-600 rounded-lg transition-all">REVOKE CREDITS</button>
         </div>
       </div>
       <div class="detail-actions">
@@ -557,12 +589,8 @@ export async function reloadPoolDetails(poolId) {
     document.getElementById('no-pool-selected').classList.add('hidden');
     // Attach event listeners to buttons
     const sponsorButton = document.getElementById(`sponsor-btn-${poolId}`);
-    const revokeButton = document.getElementById(`revoke-btn-${poolId}`);
     if (sponsorButton) {
       sponsorButton.addEventListener('click', () => sponsorCredits(poolId));
-    }
-    if (revokeButton) {
-      revokeButton.addEventListener('click', () => revokeCredits(poolId));
     }
   } catch (error) {
     showToast('Error reloading pool details: ' + error.message);
@@ -645,7 +673,6 @@ export async function viewDetails(poolId) {
         <div class="flex justify-end gap-4 mt-4">
           ${!isEnded ? `<button onclick="editPool('${poolId}')" class="py-1 px-4 text-sm font-semibold text-white bg-blue-500 hover:bg-blue-600 rounded-lg transition-all">EDIT POOL</button>` : ''}
           <button id="sponsor-btn-${poolId}" class="py-1 px-4 text-sm font-semibold text-white bg-yellow-500 hover:bg-yellow-600 rounded-lg transition-all">SPONSOR CREDITS</button>
-          <button id="revoke-btn-${poolId}" class="py-1 px-4 text-sm font-semibold text-white bg-red-500 hover:bg-red-600 rounded-lg transition-all">REVOKE CREDITS</button>
         </div>
       </div>
       <div class="detail-actions">
@@ -670,12 +697,8 @@ export async function viewDetails(poolId) {
     document.getElementById('no-pool-selected').classList.add('hidden');
     // Attach event listeners to buttons
     const sponsorButton = document.getElementById(`sponsor-btn-${poolId}`);
-    const revokeButton = document.getElementById(`revoke-btn-${poolId}`);
     if (sponsorButton) {
       sponsorButton.addEventListener('click', () => sponsorCredits(poolId));
-    }
-    if (revokeButton) {
-      revokeButton.addEventListener('click', () => revokeCredits(poolId));
     }
   } catch (error) {
     showToast('Error loading pool details: ' + error.message);

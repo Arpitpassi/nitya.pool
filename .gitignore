@@ -24,3 +24,11 @@ dist-ssr
 *.sw?
 package-lock.json
 *codebase.md
+.perma-deploy/config.json
+.perma-deploy/manifest.json
+README.md
+.perma-deploy/manifest.json
+dumdum.png
+vite.config.js
+README.md
+
