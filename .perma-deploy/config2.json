@@ -1,0 +1,13 @@
+{
+  "projectName": "nityapoolsv1",
+  "walletPath": "/home/arpit/.permaweb/nityapoolsv1/wallet.json",
+  "buildCommand": "npm --version",
+  "deployBranch": "main",
+  "arnsName": "enginesoup",
+  "undername": "nitya-poolsv",
+  "antProcess": "SvcHmgBgdRi4mAAcpw4zVcHnhyWGOyZWIMM3c1ABaEA",
+  "deployFolder": "dist",
+  "sigType": "arweave",
+  "walletAddress": "ShxYxHWC9rkL6-67_fw3VkSzAHXPZO2bX560_iUhPlQ",
+  "eventPoolId": null
+}

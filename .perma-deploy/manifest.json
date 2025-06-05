@@ -1,50 +1,40 @@
 {
   "files": {
     "assets/arweave-wallet-kit-BXDHS26-.js": {
-      "txId": "YhUvDAkx0c0OpKUGG_6079fRWh6Z2gQypAodI48ChOQ",
+      "txId": "LJsr9gVj95fHZWXR0LB43CpmGfsUKH1RV8wI9mp8xrQ",
       "hash": "6c3988fc58cdaa21cc91f208b2c845e21945e495b1f1cdcdb11e30bd141b3dd9",
-      "lastModified": "2025-06-04T01:23:04.550Z"
+      "lastModified": "2025-06-05T18:11:37.982Z"
     },
-    "assets/index-BR5jOzUH.css": {
-      "txId": "9JG4m_Wohq4XKMK60mzsFanY2BdRwMPmi7AnwiGXLyo",
-      "hash": "8e4c14cd7b00bda2fa2ada6a418227e5845bd1056054dff41f3665ee22be6d44",
-      "lastModified": "2025-06-04T01:23:04.563Z"
+    "assets/dashboard-DKOD2Zo_.js": {
+      "txId": "bNNPWfko2NoPM_jUzDVXT4DqS5G6ukSCHrD7xJgy_Pg",
+      "hash": "d2ff825f5a223fc974e9ee36509c4a1ce3ae1a80ce8688e8bd53626bfa5cd3b6",
+      "lastModified": "2025-06-05T18:11:37.987Z"
     },
-    "assets/index-BhJKuJpK.js": {
-      "txId": "OyE83QAbXJwzvJFB8k_X3niQ2AOYnf5sQ1GuMzS3mdQ",
-      "hash": "c7bd85221dce781f4ddc81be3d2298a487327e6689f2e2f1bb1f5e81822e2db4",
-      "lastModified": "2025-06-04T01:23:04.571Z"
+    "assets/logo-XE7CtH8J.png": {
+      "txId": "pSKVl0huxRkjM2_MAUcZ8otYenxqvOKBwC0RpnuGBa0",
+      "hash": "6c30fbb983de7987dec8d36a3ef4c4fb0a5dc12ca5f6dd175e26ff9913af9b61",
+      "lastModified": "2025-06-05T18:11:37.993Z"
     },
     "assets/vendor-BJKwa82_.js": {
-      "txId": "V2pPtT-fVMXaxqWKi3TvZwAqxoagGDEwKAilcXy19uE",
+      "txId": "s_nfhRR9UuBiIf_5NgH1KSohI3E09OmaeU-8cqI_dPI",
       "hash": "ea347ef9d68ae07c7c67deed72b4a841805432397f5ab13d6e9effc9e62c2f1d",
-      "lastModified": "2025-06-04T01:23:04.603Z"
+      "lastModified": "2025-06-05T18:11:38.003Z"
+    },
+    "assets/wallet-modal-CfZ6NgPl.css": {
+      "txId": "YhG_WrLw1WIlHjyvEpLATlIYC7WUnpxoWOJuoligoH8",
+      "hash": "a161b340ee7bce684512fa01e3f4998214e2944c758b03b7f69e22a2028793ad",
+      "lastModified": "2025-06-05T18:11:38.010Z"
+    },
+    "dashboard.html": {
+      "txId": "MCf0GgM3Tf8R_IJwzUO8MgeMKPHYKrjaD8az98xzNak",
+      "hash": "047a69243bf6da6ab2d6c16b1efc7022e4a7ff97085daead84037b07e6510233",
+      "lastModified": "2025-06-05T18:11:38.012Z"
     },
     "index.html": {
-      "txId": "FGp3hBNCJjD6IeZiYSmUEeAGHz77B3XuUI2DGC5lP8M",
-      "hash": "b8e73144c6597c9bad0f189e845d42460d182025272be13d29fdb20a71a73c58",
-      "lastModified": "2025-06-04T10:17:04.967Z"
-    },
-    "assets/index-BVE1bMWH.js": {
-      "txId": "w5OCHiMAgHmyw9UQ_CLgdKCOFonJXlQGSgYGTXIDhu4",
-      "hash": "6605a9ff0f6194f2ca27efcd7a90ae8779d801054ed9cdcb4146ecbfaa8eea8a",
-      "lastModified": "2025-06-04T01:46:03.329Z"
-    },
-    "assets/index-BORQbk04.js": {
-      "txId": "5E9CjrEAhwzJUveIG3c7jEO2RuTCpGQhLUMdDOO0E6g",
-      "hash": "49fe5bc0c9a4d1595c5dadb7d8de9560d509a6e2873cb8cf2d8f2f2b9b37ef98",
-      "lastModified": "2025-06-04T02:34:35.524Z"
-    },
-    "assets/index-CTpt-7qp.js": {
-      "txId": "OrHahIxVgtpioZQrtqEanz0pUwRqymsx9bnH8pBU3Gg",
-      "hash": "ee87096262eb0f612a3b8c0c913b559dfabd408f51cd8d3aa8abab005a4f33bc",
-      "lastModified": "2025-06-04T02:38:24.801Z"
-    },
-    "assets/index-wEhOJVhg.js": {
-      "txId": "DfPIEGkL4G80S_T72gS2O7FeKraga-gtIqF3bzvxe9k",
-      "hash": "04bf5c7c55015eaf95fee810947ec90766ef5171f0e480ad427b067577e657c6",
-      "lastModified": "2025-06-04T02:47:06.326Z"
+      "txId": "nViIXgiC0RcnBybJa6z0bqVR_nJT8JN1bEy8nwYHZFI",
+      "hash": "90c8effe8f9046536f0ff0101101f66c08eb6f1b6d4fe07914d719cb0b60a9a2",
+      "lastModified": "2025-06-05T18:40:54.529Z"
     }
   },
-  "lastManifestId": "tBCs997Cod7gVwJdszcOXt9gx8x-eo0D9dPa1hR9hAI"
+  "lastManifestId": "bd7csRumQ99tBLi4GcaRL-hSObSj9oY64YFm8AYLDlo"
 }

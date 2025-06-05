@@ -418,7 +418,8 @@ export async function deletePoolConfirm() {
       if (!response.ok) {
         throw new Error(`${result.error || 'Failed to delete pool'} (${result.code || 'UNKNOWN_ERROR'})`);
       }
-      document.getElementById('details-modal').classList.add('hidden');
+      document.getElementById('no-pool-selected').classList.remove('hidden');
+      document.getElementById('pool-details').classList.add('hidden');
       loadPools();
       showToast('Pool deleted successfully!', 'success');
     } catch (error) {
@@ -467,89 +468,70 @@ export async function viewDetails(poolId) {
     const endTime = new Date(pool.endTime);
     const isEnded = now > endTime;
     const statusText = isEnded ? 'Ended' : 'Active';
-    const statusColor = isEnded ? 'text-red-600 bg-red-100' : 'text-blue-600 bg-blue-100';
+    const statusColor = isEnded ? 'text-red-600' : 'text-green-600';
+    // Populate pool-details-content with pool info and actions
     const detailsContent = `
-      <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
-        <div class="space-y-6">
-          <div class="pool-details-section rounded-2xl p-6">
-            <h4 class="font-bold text-gray-900 mb-4 text-lg">Pool Information</h4>
-            <div class="space-y-3 text-sm">
-              <div class="flex justify-between py-2 border-b border-gray-200">
-                <span class="text-gray-600 font-medium">Name:</span>
-                <span class="font-semibold">${pool.name}</span>
-              </div>
-              <div class="flex justify-between py-2 border-b border-gray-200">
-                <span class="text-gray-600 font-medium">Status:</span>
-                <span class="px-3 py-1 rounded-full text-xs font-bold ${statusColor}">${statusText}</span>
-              </div>
-              <div class="flex justify-between py-2">
-                <span class="text-gray-600 font-medium">Pool ID:</span>
-                <span class="pool-id">${poolId}</span>
-              </div>
-            </div>
+      <div class="detail-section">
+        <div class="detail-title">POOL INFORMATION</div>
+        <div id="pool-info" class="detail-value">
+          <div class="flex justify-between py-2 border-b border-gray-200">
+            <span class="text-gray-600 font-medium">Name:</span>
+            <span class="font-semibold">${pool.name}</span>
           </div>
-          <div class="pool-details-section rounded-2xl p-6">
-            <h4 class="font-bold text-gray-900 mb-4 text-lg">Time & Usage</h4>
-            <div class="space-y-3 text-sm">
-              <div class="flex justify-between py-2 border-b border-gray-200">
-                <span class="text-gray-600 font-medium">Start Time:</span>
-                <span class="font-semibold">${formatDisplayTime(pool.startTime)}</span>
-              </div>
-              <div class="flex justify-between py-2 border-b border-gray-200">
-                <span class="text-gray-600 font-medium">End Time:</span>
-                <span class="font-semibold">${formatDisplayTime(pool.endTime)}</span>
-              </div>
-              <div class="flex justify-between py-2 border-b border-gray-200">
-                <span class="text-gray-600 font-medium">Usage Cap:</span>
-                <span class="font-semibold">${pool.usageCap} Credits</span>
-              </div>
-            </div>
+          <div class="flex justify-between py-2 border-b border-gray-200">
+            <span class="text-gray-600 font-medium">Status:</span>
+            <span class="font-semibold ${statusColor}">${statusText}</span>
           </div>
-          <div class="pool-details-section rounded-2xl p-6">
-            <h4 class="font-bold text-gray-900 mb-4 text-lg">Wallet Balance</h4>
-            <div class="space-y-3 text-sm">
-              <div class="flex justify-between py-2">
-                <span class="text-gray-600 font-medium">Current Balance:</span>
-                <span class="font-bold text-2xl text-blue-600">${(balance.balance || 0).toFixed(2)}</span>
-              </div>
-            </div>
+          <div class="flex justify-between py-2 border-b border-gray-200">
+            <span class="text-gray-600 font-medium">Pool ID:</span>
+            <span class="font-semibold">${poolId}</span>
           </div>
-          <div class="pool-details-section rounded-2xl p-6">
-            <h4 class="font-bold text-gray-900 mb-4 text-lg">Actions</h4>
-            <button id="sponsor-btn-${poolId}" class="w-full btn-primary py-2 rounded-lg text-sm font-semibold transition-all mb-2">Sponsor Credits</button>
-            <button id="revoke-btn-${poolId}" class="w-full btn-warning py-2 rounded-lg text-sm font-semibold transition-all">Revoke Credits</button>
+          <div class="flex justify-between py-2 border-b border-gray-200">
+            <span class="text-gray-600 font-medium">Start Time:</span>
+            <span class="font-semibold">${formatDisplayTime(pool.startTime)}</span>
           </div>
-        </div>
-        <div class="space-y-6">
-          <div class="pool-details-section rounded-2xl p-6">
-            <h4 class="font-bold text-gray-900 mb-4 text-lg">Whitelisted Addresses (${pool.whitelist.length})</h4>
-            <div class="max-h-80 overflow-y-auto space-y-2">
+          <div class="flex justify-between py-2 border-b border-gray-200">
+            <span class="text-gray-600 font-medium">End Time:</span>
+            <span class="font-semibold">${formatDisplayTime(pool.endTime)}</span>
+          </div>
+          <div class="flex justify-between py-2 border-b border-gray-200">
+            <span class="text-gray-600 font-medium">Usage Cap:</span>
+            <span class="font-semibold">${pool.usageCap} Credits</span>
+          </div>
+          <div class="flex justify-between py-2 border-b border-gray-200">
+            <span class="text-gray-600 font-medium">Current Balance:</span>
+            <span class="font-semibold">${(balance.balance || 0).toFixed(2)} Credits</span>
+          </div>
+          <div class="flex justify-between py-2">
+            <span class="text-gray-600 font-medium">Whitelisted Addresses (${pool.whitelist.length}):</span>
+            <div class="max-h-80 overflow-y-auto">
               ${pool.whitelist.map(address => `
-                <div class="address-item valid">
-                  <span class="break-all">${address}</span>
-                </div>
+                <div class="address-item valid break-all">${address}</div>
               `).join('')}
             </div>
           </div>
         </div>
       </div>
+      <div class="detail-actions">
+        <div class="action-section">
+          <div class="action-title">REVOKE ACCESS</div>
+          <input type="text" id="revoke-address" placeholder="Enter wallet address to revoke" class="action-input" style="margin-bottom: 15px;">
+          <button onclick="revokeAccess()" class="action-button btn-warning">REVOKE ACCESS</button>
+        </div>
+        <div class="action-section">
+          <div class="action-title">DOWNLOAD WALLET</div>
+          <button onclick="downloadWallet()" class="action-button btn-success">DOWNLOAD WALLET</button>
+        </div>
+        <div class="action-section">
+          <div class="action-title">DELETE POOL</div>
+          <button onclick="deletePoolConfirm()" class="action-button btn-delete">DELETE POOL</button>
+        </div>
+      </div>
     `;
+    // Update pool-details-content and toggle visibility
     document.getElementById('pool-details-content').innerHTML = detailsContent;
-    const sponsorButton = document.getElementById(`sponsor-btn-${poolId}`);
-    const revokeButton = document.getElementById(`revoke-btn-${poolId}`);
-    const closeButton = document.getElementById('close-details');
-    if (sponsorButton) {
-      sponsorButton.addEventListener('click', () => sponsorCredits(poolId));
-    }
-    if (revokeButton) {
-      revokeButton.addEventListener('click', () => revokeCredits(poolId));
-    }
-    if (closeButton) {
-      closeButton.addEventListener('click', () => {
-        document.getElementById('details-modal').classList.add('hidden');
-      });
-    }
-    document.getElementById('details-modal').classList.remove('hidden');
+    document.getElementById('pool-details').classList.remove('hidden');
+    document.getElementById('no-pool-selected').classList.add('hidden');
   } catch (error) {
     showToast('Error loading pool details: ' + error.message);
   }
@@ -691,5 +673,5 @@ function initializeModalListeners() {
   }
 }
 
-// Run initialization when the DOM full loadeds
+// Run initialization when the DOM fully loads
 document.addEventListener('DOMContentLoaded', initializeModalListeners);

@@ -1,4 +1,3 @@
-
 import { updateWhitelistPreview, handleWhitelistFile } from './dom.js';
 import { showWalletChoiceModal, connectWithStrategy, disconnectWallet, browserWalletStrategy, beaconStrategy } from './wallet.js';
 import { createPool, editPoolSubmit, revokeAccess, shareCredits, downloadWallet, deletePoolConfirm, editPool, viewDetails } from './pool.js';
@@ -111,13 +110,6 @@ document.addEventListener('DOMContentLoaded', () => {
       document.getElementById('edit-modal').classList.add('hidden');
       document.getElementById('edit-pool-form').reset();
       document.getElementById('whitelist-preview-edit').innerHTML = '';
-    });
-  }
-
-  const closeDetailsBtn = document.getElementById('close-details');
-  if (closeDetailsBtn) {
-    closeDetailsBtn.addEventListener('click', () => {
-      document.getElementById('details-modal').classList.add('hidden');
     });
   }
 

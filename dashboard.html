@@ -589,7 +589,28 @@
         <div id="pool-details" class="pool-details hidden">
           <button id="edit-pool-btn" class="edit-pool-btn">EDIT</button>
           <div id="pool-details-content">
-            <!-- Pool details will be populated here by your JS -->
+            <!-- Pool details (name, status, etc.) will be populated here by JS -->
+            <div class="detail-section">
+              <div class="detail-title">POOL INFORMATION</div>
+              <div id="pool-info" class="detail-value">
+                <!-- Dynamic pool info like name, ID, status, etc. -->
+              </div>
+            </div>
+            <div class="detail-actions">
+              <div class="action-section">
+                <div class="action-title">REVOKE ACCESS</div>
+                <input type="text" id="revoke-address" placeholder="Enter wallet address to revoke" class="action-input" style="margin-bottom: 15px;">
+                <button onclick="revokeAccess()" class="action-button btn-warning">REVOKE ACCESS</button>
+              </div>
+              <div class="action-section">
+                <div class="action-title">DOWNLOAD WALLET</div>
+                <button onclick="downloadWallet()" class="action-button btn-success">DOWNLOAD WALLET</button>
+              </div>
+              <div class="action-section">
+                <div class="action-title">DELETE POOL</div>
+                <button onclick="deletePoolConfirm()" class="action-button btn-delete">DELETE POOL</button>
+              </div>
+            </div>
           </div>
         </div>
 
@@ -721,29 +742,11 @@
     </div>
   </div>
 
-  <!-- View Details Modal (reduced - most content now shows in main area) -->
-  <div id="details-modal" class="fixed inset-0 modal-overlay hidden z-50 flex items-center justify-center p-4">
-    <div class="modal-content p-8 relative" style="max-width: 500px;">
-      <button id="close-details" class="close-btn">×</button>
-      <h3 class="modal-title">ADDITIONAL ACTIONS</h3>
-      
-      <div class="detail-section">
-        <div class="detail-title">REVOKE ACCESS</div>
-        <input type="text" id="revoke-address" placeholder="Enter wallet address to revoke" class="form-input" style="margin-bottom: 15px;">
-        <button onclick="revokeAccess()" class="btn-warning" style="width: 100%;">REVOKE ACCESS</button>
-      </div>
-      
-      <div class="detail-section">
-        <div class="detail-title">DOWNLOAD WALLET</div>
-        <button onclick="downloadWallet()" class="btn-success" style="width: 100%;">DOWNLOAD WALLET</button>
-      </div>
-      
-      <div class="detail-section">
-        <div class="detail-title">DELETE POOL</div>
-        <button onclick="deletePoolConfirm()" class="btn-delete" style="width: 100%;">DELETE POOL</button>
-      </div>
+  <footer class="bg-gray-50 py-8 px-4 sm:px-6 lg:px-8">
+    <div class="container text-center">
+      <p class="text-gray-600">© 2025 Nityaprotocol. All rights reserved.Version 0.0.18</p>
     </div>
-  </div>
+  </footer>
 
   <script type="module" src="src/main.js"></script>
 </body>
