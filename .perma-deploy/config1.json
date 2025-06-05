@@ -1,0 +1,13 @@
+{
+  "projectName": "test",
+  "walletPath": "/home/arpit/.permaweb/test/wallet.json",
+  "buildCommand": "npm --version",
+  "deployBranch": "main",
+  "arnsName": null,
+  "undername": null,
+  "antProcess": null,
+  "deployFolder": "dist",
+  "sigType": "arweave",
+  "walletAddress": "dPRrZljpluFuYRWc6YzyCV0j3F2LM33PwZRuZzFURlk",
+  "eventPoolId": null
+}

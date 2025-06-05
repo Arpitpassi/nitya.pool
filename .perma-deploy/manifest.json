@@ -26,15 +26,20 @@
       "lastModified": "2025-06-05T18:11:38.010Z"
     },
     "dashboard.html": {
-      "txId": "7COm8Kh5lMQBslNX1zi2Dq_VxCPkM6TojUJiTwXIddA",
-      "hash": "e7f97af380ec1d42b0a6efd7220989fbb419a8be829755a61879b133bf2014d9",
-      "lastModified": "2025-06-05T21:17:04.639Z"
+      "txId": "_8MH_kW25n1ITpRA9JxANXXoXDILh6JaXw3-uatxuQA",
+      "hash": "ebe5b805dae436028fbc4a59d1d455fd337396ee0e139d0bdb9242d78c68ffa6",
+      "lastModified": "2025-06-05T23:09:07.954Z"
     },
     "index.html": {
-      "txId": "QoeNnNypjj2A9Ma9h69aMZZUUiKeM-ZD21pFXjn_ncY",
-      "hash": "a88364abebe91c25243891a9f8452739efe9ce49177d96da123eb35c56aa9b4f",
-      "lastModified": "2025-06-05T21:17:04.639Z"
+      "txId": "ZMBT8AdBc2iufurnt6N-PyGJ2Ov9BTVlW0PGSeLNckU",
+      "hash": "acab8113b66609d16016d17281f65adf52e262f05987c9b2cf1c58b3163b1285",
+      "lastModified": "2025-06-05T23:10:59.957Z"
+    },
+    "assets/dashboard-BAC96URW.js": {
+      "txId": "JrWAiM6iSL58BR5yU0kxmhI2HTXKxO-dAsE5hdWEGBg",
+      "hash": "6d65d10458896f67e0cfe39479fdacec17148c220691f37923ecebd23486643b",
+      "lastModified": "2025-06-05T23:07:52.572Z"
     }
   },
-  "lastManifestId": "8CwvICB8dhjVEZnn-LTczHYjMc6QRMRdHlyoISgU1JM"
+  "lastManifestId": "qa4FpOpNrjUXGvyZr2vw9hlDoAkVtlqI0kPy-7ib9Yc"
 }
