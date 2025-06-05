@@ -129,7 +129,8 @@ export async function editPoolSubmit(event) {
     document.getElementById('whitelist-preview-edit').innerHTML = '';
     loadPools();
     showToast('Pool updated successfully!', 'success');
-    viewDetails(currentEditPoolId);
+    // Reload pool details with fresh data
+    reloadPoolDetails(currentEditPoolId);
   } catch (error) {
     showToast('Error updating pool: ' + error.message);
   }
@@ -447,8 +448,129 @@ export function editPool(poolId) {
   updateWhitelistPreview('edit-whitelist', 'whitelist-preview-edit');
 }
 
+export async function reloadPoolDetails(poolId) {
+  currentEditPoolId = poolId;
+  try {
+    const serverUrl = document.getElementById('server-url').value;
+    if (!serverUrl) {
+      showToast('Server URL is missing.');
+      return;
+    }
+    // Fetch fresh pool data from /pools endpoint
+    const response = await fetch(`${serverUrl}/pools?creatorAddress=${encodeURIComponent(walletAddress)}`, {
+      headers: { 'X-API-Key': DEPLOY_API_KEY }
+    });
+    if (!response.ok) {
+      const errorData = await response.json();
+      throw new Error(`${errorData.error || 'Failed to fetch pools'} (${errorData.code || 'UNKNOWN_ERROR'})`);
+    }
+    const pools = await response.json();
+    const pool = pools[poolId];
+    if (!pool) {
+      showToast('Pool not found.');
+      return;
+    }
+    // Fetch the latest pool balance
+    const balanceResponse = await fetch(`${serverUrl}/pool/${encodeURIComponent(poolId)}/balance?creatorAddress=${encodeURIComponent(walletAddress)}`, {
+      headers: { 'X-API-Key': DEPLOY_API_KEY }
+    });
+    const balanceData = balanceResponse.ok ? await balanceResponse.json() : { balance: { balance: 0 } };
+    const balance = balanceData.balance || { balance: 0 };
+    const now = new Date();
+    const endTime = new Date(pool.endTime);
+    const isEnded = now > endTime;
+    const statusText = isEnded ? 'Ended' : 'Active';
+    const statusColor = isEnded ? 'text-red-600' : 'text-green-600';
 
- 
+    // Clear previous content to ensure fresh render
+    document.getElementById('pool-details-content').innerHTML = '';
+    document.getElementById('pool-details').classList.add('hidden');
+    document.getElementById('no-pool-selected').classList.add('hidden');
+
+    // Populate pool-details-content with pool info and actions
+    const detailsContent = `
+      <div class="detail-section">
+        <div class="detail-title">POOL INFORMATION</div>
+        <div id="pool-info" class="detail-value">
+          <div class="flex justify-between py-2 border-b border-gray-200">
+            <span class="text-gray-600 font-medium">Name:</span>
+            <span class="font-semibold">${pool.name}</span>
+          </div>
+          <div class="flex justify-between py-2 border-b border-gray-200">
+            <span class="text-gray-600 font-medium">Status:</span>
+            <span class="font-semibold ${statusColor}">${statusText}</span>
+          </div>
+          <div class="flex justify-between py-2 border-b border-gray-200">
+            <span class="text-gray-600 font-medium">Pool ID:</span>
+            <span class="font-semibold">${poolId}</span>
+          </div>
+          <div class="flex justify-between py-2 border-b border-gray-200">
+            <span class="text-gray-600 font-medium">Start Time:</span>
+            <span class="font-semibold">${formatDisplayTime(pool.startTime)}</span>
+          </div>
+          <div class="flex justify-between py-2 border-b border-gray-200">
+            <span class="text-gray-600 font-medium">End Time:</span>
+            <span class="font-semibold">${formatDisplayTime(pool.endTime)}</span>
+          </div>
+          <div class="flex justify-between py-2 border-b border-gray-200">
+            <span class="text-gray-600 font-medium">Usage Cap:</span>
+            <span class="font-semibold">${pool.usageCap} Credits</span>
+          </div>
+          <div class="flex justify-between py-2 border-b border-gray-200">
+            <span class="text-gray-600 font-medium">Current Balance:</span>
+            <span class="font-semibold">${(balance.balance || 0).toFixed(2)} Credits</span>
+          </div>
+          <div class="flex justify-between py-2">
+            <span class="text-gray-600 font-medium">Whitelisted Addresses (${pool.whitelist.length}):</span>
+            <div class="max-h-80 overflow-y-auto">
+              ${pool.whitelist.map(address => `
+                <div class="address-item valid break-all">${address}</div>
+              `).join('')}
+            </div>
+          </div>
+        </div>
+        <div class="flex justify-end gap-4 mt-4">
+          ${!isEnded ? `<button onclick="editPool('${poolId}')" class="text-sm font-semibold py-2 px-4 rounded-lg text-white bg-blue-500 hover:bg-blue-600 transition-all duration-200">EDIT POOL</button>` : ''}
+          <button id="sponsor-btn-${poolId}" class="text-sm font-semibold py-2 px-4 rounded-lg text-white bg-yellow-500 hover:bg-yellow-600 transition-all duration-200">SPONSOR</button>
+          <button id="revoke-btn-${poolId}" class="text-sm font-semibold py-2 px-4 rounded-lg text-white bg-red-500 hover:bg-red-600 transition-all duration-200">REVOKE</button>
+        </div>
+      </div>
+      <div class="detail-actions">
+        <div class="action-section">
+          <div class="action-title">REVOKE ACCESS</div>
+          <input type="text" id="input" placeholder="Enter wallet address to revoke" class="action-row w-full">
+          <button onclick="revoAccess()" class="action-row w-full text-sm font-semibold py-2 px-4 rounded-lg text-white bg-orange-400 hover:bg-orange-600 transition-all duration-300">REVOKE ACCESS</button>
+        </div>
+        <div class="action-section">
+          <div class="action-title">DOWNLOAD WALLET</div>
+          <button onclick="downloadWallet()" class="action-row w-full text-sm font-semibold py-2 px-4 rounded-lg text-white bg-blue-500 hover:bg-blue-700 transition-all duration-300">DOWNLOAD WALLET</button>
+        </div>
+        <div class="action-section">
+          <div class="action-title">DELETE POOL</div>
+          <button onclick="deletePoolConfirm()" class="action-row w-full text-sm font-semibold py-2 px-4 rounded-lg text-white bg-red-600 hover:bg-red-400 transition-all duration-300">DELETE</button>
+        </div>
+      </div>
+    `;
+    // Update pool-details-content and toggle visibility
+    document.getElementById('pool-details-content').innerHTML = detailsContent;
+    document.getElementById('pool-details').classList.remove('hidden');
+    document.getElementById('no-pool-selected').classList.add('hidden');
+    // Attach event listeners to buttons
+    const sponsorButton = document.getElementById(`sponsor-btn-${poolId}`);
+    const revokeButton = document.getElementById(`revoke-btn-${poolId}`);
+    if (sponsorButton) {
+      sponsorButton.addEventListener('click', () => sponsorCredits(poolId));
+    }
+    if (revokeButton) {
+      revokeButton.addEventListener('click', () => revokeCredits(poolId));
+    }
+  } catch (error) {
+    showToast('Error reloading pool details: ' + error.message);
+    document.getElementById('pool-details').classList.add('hidden');
+    document.getElementById('no-pool-selected').classList.remove('hidden');
+  }
+}
+
 export async function viewDetails(poolId) {
   const pool = poolDataMap.get(poolId);
   if (!pool) {
@@ -521,23 +643,24 @@ export async function viewDetails(poolId) {
           </div>
         </div>
         <div class="flex justify-end gap-4 mt-4">
-          <button id="sponsor-btn-${poolId}" class="py-1 px-4 text-sm font-semibold text-white bg-yellow-500 hover:bg-yellow-600 rounded-lg transition-all">SPONSOR CREDITS</button>
-          <button id="revoke-btn-${poolId}" class="py-1 px-4 text-sm font-semibold text-white bg-red-500 hover:bg-red-600 rounded-lg transition-all">REVOKE CREDITS</button>
+          ${!isEnded ? `<button onclick="editPool('${poolId}')" class="text-sm font-semibold py-2 px-4 rounded-lg text-white bg-blue-500 hover:bg-blue-600 transition-all duration-200">EDIT POOL</button>` : ''}
+          <button id="sponsor-btn-${poolId}" class="text-sm font-semibold py-2 px-4 rounded-lg text-white bg-yellow-500 hover:bg-yellow-600 transition-all duration-200">SPONSOR</button>
+          <button id="revoke-btn-${poolId}" class="text-sm font-semibold py-2 px-4 rounded-lg text-white bg-red-500 hover:bg-red-600 transition-all duration-200">REVOKE</button>
         </div>
       </div>
       <div class="detail-actions">
         <div class="action-section">
           <div class="action-title">REVOKE ACCESS</div>
-          <input type="text" id="revoke-address" placeholder="Enter wallet address to revoke" class="action-input" style="margin-bottom: 15px;">
-          <button onclick="revokeAccess()" class="action-button btn-warning">REVOKE ACCESS</button>
+          <input type="text" id="input" placeholder="Enter wallet address to revoke" class="action-row w-full">
+          <button onclick="revoAccess()" class="action-row w-full text-sm font-semibold py-2 px-4 rounded-lg text-white bg-orange-400 hover:bg-orange-600 transition-all duration-300">REVOKE ACCESS</button>
         </div>
         <div class="action-section">
           <div class="action-title">DOWNLOAD WALLET</div>
-          <button onclick="downloadWallet()" class="action-button btn-success">DOWNLOAD WALLET</button>
+          <button onclick="downloadWallet()" class="action-row w-full text-sm font-semibold py-2 px-4 rounded-lg text-white bg-blue-500 hover:bg-blue-700 transition-all duration-300">DOWNLOAD WALLET</button>
         </div>
         <div class="action-section">
           <div class="action-title">DELETE POOL</div>
-          <button onclick="deletePoolConfirm()" class="action-button btn-delete">DELETE POOL</button>
+          <button onclick="deletePoolConfirm()" class="action-row w-full text-sm font-semibold py-2 px-4 rounded-lg text-white bg-red-600 hover:bg-red-400 transition-all duration-300">DELETE</button>
         </div>
       </div>
     `;
@@ -560,7 +683,6 @@ export async function viewDetails(poolId) {
     document.getElementById('no-pool-selected').classList.remove('hidden');
   }
 }
-
 
 export async function loadPools() {
   const poolsGrid = document.getElementById('pools-grid');
@@ -596,7 +718,7 @@ export async function loadPools() {
       if (!isEnded) activePools++;
       const statusColor = isEnded ? 'bg-red-100 text-red-600' : 'bg-blue-100 text-blue-600';
       const statusText = isEnded ? 'Ended' : 'Active';
-      const isActive = poolId === currentEditPoolId ? 'active' : ''; // Add active class if this is the current pool
+      const isActive = poolId === currentEditPoolId ? 'active' : '';
       const poolCard = document.createElement('div');
       poolCard.className = `pool-card p-6 bg-white shadow rounded-2xl ${isActive}`;
       poolCard.innerHTML = `
@@ -624,7 +746,6 @@ export async function loadPools() {
         </div>
         <div class="space-y-2">
           <button onclick="viewDetails('${poolId}')" class="w-full btn-primary py-2 rounded-lg text-sm font-semibold transition-all">Pool Actions</button>
-          ${!isEnded ? `<button onclick="editPool('${poolId}')" class="w-full btn-secondary py-2 rounded-lg text-sm font-semibold transition-all">Edit Pool</button>` : ''}
         </div>
       `;
       poolsGrid.appendChild(poolCard);
