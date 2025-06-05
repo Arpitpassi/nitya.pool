@@ -129,6 +129,7 @@ export async function editPoolSubmit(event) {
     document.getElementById('whitelist-preview-edit').innerHTML = '';
     loadPools();
     showToast('Pool updated successfully!', 'success');
+    viewDetails(currentEditPoolId);
   } catch (error) {
     showToast('Error updating pool: ' + error.message);
   }
@@ -511,6 +512,10 @@ export async function viewDetails(poolId) {
             </div>
           </div>
         </div>
+        <div class="flex justify-start gap-4 mt-4">
+          <button id="sponsor-btn-${poolId}" class="py-1 px-4 text-sm font-semibold text-white bg-yellow-500 hover:bg-yellow-600 rounded-lg transition-all">SPONSOR CREDITS</button>
+          <button id="revoke-btn-${poolId}" class="py-1 px-4 text-sm font-semibold text-white bg-red-500 hover:bg-red-600 rounded-lg transition-all">REVOKE CREDITS</button>
+        </div>
       </div>
       <div class="detail-actions">
         <div class="action-section">
@@ -532,6 +537,15 @@ export async function viewDetails(poolId) {
     document.getElementById('pool-details-content').innerHTML = detailsContent;
     document.getElementById('pool-details').classList.remove('hidden');
     document.getElementById('no-pool-selected').classList.add('hidden');
+    // Attach event listeners to buttons
+    const sponsorButton = document.getElementById(`sponsor-btn-${poolId}`);
+    const revokeButton = document.getElementById(`revoke-btn-${poolId}`);
+    if (sponsorButton) {
+      sponsorButton.addEventListener('click', () => sponsorCredits(poolId));
+    }
+    if (revokeButton) {
+      revokeButton.addEventListener('click', () => revokeCredits(poolId));
+    }
   } catch (error) {
     showToast('Error loading pool details: ' + error.message);
   }
@@ -655,15 +669,15 @@ function initializeModalListeners() {
   if (closeEditModal) {
     closeEditModal.addEventListener('click', () => {
       document.getElementById('edit-modal').classList.add('hidden');
-      document.getElementById('edit-pool-form').reset();
+      document.getElementById('edit-pool-form').value;
       document.getElementById('whitelist-preview-edit').innerHTML = '';
     });
   }
   if (cancelEdit) {
     cancelEdit.addEventListener('click', () => {
       document.getElementById('edit-modal').classList.add('hidden');
-      document.getElementById('edit-pool-form').reset();
-      document.getElementById('whitelist-preview-edit').innerHTML = '';
+      document.getElementById('edit-pool-form').reset;
+      document.getElementById('whitelist-preview-edit').value = '';
     });
   }
   if (editSubmitBtn) {
@@ -673,5 +687,5 @@ function initializeModalListeners() {
   }
 }
 
-// Run initialization when the DOM fully loads
+// Run initialization when the DOM fully loaded
 document.addEventListener('DOMContentLoaded', initializeModalListeners);
