@@ -30,8 +30,6 @@
   <link rel="stylesheet" href="src/new-styles.css">
   <link rel="stylesheet" href="src/wallet-modal.css">
   <!-- Wallet Strategy Dependencies -->
-  <script src="https://unpkg.com/@arweave-wallet-kit/browser-wallet-strategy"></script>
-  <script src="https://unpkg.com/@vela-ventures/aosync-strategy"></script>
   <style>
     * {
       font-family: 'JetBrains Mono', monospace;
@@ -151,6 +149,12 @@
     footer {
       border-top: 2px solid #000000;
     }
+
+    .logo-style {
+    width: 55px; /* Matches Tailwind's w-16 */
+    height: 55px; /* Matches Tailwind's h-16 */
+    margin-top: 2px;
+}
   </style>
 </head>
 <body>
@@ -166,10 +170,8 @@
     <div class="container px-4 sm:px-6 lg:px-8">
       <div class="flex justify-between items-center h-16">
         <div class="flex items-center">
-          <a href="/" class="flex items-center">
-            <img src="logo.jpg" alt="Nityaprotocol Logo" class="w-10 h-10 mr-3">
-            <h1 class="text-xl font-bold">Nityaprotocol</h1>
-          </a>
+          <img src="logo.png" alt="Nityaprotocol Logo" class="logo-style mr-3">
+          <h1 class="text-xl font-bold">Nityaprotocol</h1>
         </div>
         <button id="theme-toggle" class="p-2 rounded-lg hover:bg-gray-200 transition-colors">
           <svg id="sun-icon" class="w-5 h-5 hidden" fill="currentColor" viewBox="0 0 20 20">
@@ -188,7 +190,7 @@
     <div class="container text-center px-4 sm:px-6 lg:px-8">
       <h1 class="text-4xl md:text-6xl font-bold mb-6">Nitya Pools</h1>
       <p class="text-xl text-gray-600 mb-8 max-w-2xl mx-auto">
-        Create and manage sponsored credit pools for the Arweave ecosystem. Streamline your deployment process with advanced pool management.
+        Creating and managing sponsored credit pools for the Arweave ecosystem made easy.
       </p>
       <button id="get-started-btn" class="btn-primary px-8 py-4 text-lg font-semibold">
         Get Started
@@ -208,7 +210,7 @@
             </svg>
           </div>
           <h3 class="text-xl font-semibold mb-3">Pool Management</h3>
-          <p class="text-gray-600">Create and manage multiple deployment pools with custom configurations and access controls.</p>
+          <p class="text-gray-600">Create and manage multiple sponsor pools with custom configurations and access controls.</p>
         </div>
         <div class="feature-card p-6 rounded-2xl">
           <div class="w-12 h-12 bg-gray-100 rounded-lg flex items-center justify-center mb-4">
@@ -226,7 +228,7 @@
             </svg>
           </div>
           <h3 class="text-xl font-semibold mb-3">Real-time Analytics</h3>
-          <p class="text-gray-600">Monitor pool usage, track spending, and get detailed insights into your deployment activities.</p>
+          <p class="text-gray-600">Monitor pool usage, track spending, and get detailed insights into your pool activities.</p>
         </div>
       </div>
     </div>
@@ -255,15 +257,16 @@
           <h3 class="text-lg font-semibold mb-2">Price Calculator🔗</h3>
           <p class="text-gray-600 text-sm">Calculate Turbo credit costs</p>
         </a>
-        <a href="https://prices.ardrive.io/" target="_blank" class="pool-card p-6 rounded-2xl hover:bg-gray-100 transition-colors">
+        <a href="https://github.com/ropats16/nitya-pools-code-ref" target="_blank" class="pool-card p-6 rounded-2xl hover:bg-gray-100 transition-colors">
           <div class="w-12 h-12 bg-gray-100 rounded-lg flex items-center justify-center mx-auto mb-4">
             <svg class="w-6 h-6 text-black" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 7h6m0 10v-3m-3 3h.01M9 17h.01M9 14h.01M12 14h.01M15 11h.01M12 11h.01M9 11h.01M7 21h10a2 2 0 002-2V5a2 2 0 00-2-2H7a2 2 0 00-2 2v14a2 2 0 002 2z"></path>
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
             </svg>
           </div>
           <h3 class="text-lg font-semibold mb-2">Documentation🔗</h3>
           <p class="text-gray-600 text-sm">Learn how to use sponsored credits</p>
         </a>
+        
       </div>
     </div>
   </section>
@@ -271,7 +274,7 @@
   <!-- Footer -->
   <footer class="bg-gray-50 py-8 px-4 sm:px-6 lg:px-8">
     <div class="container text-center">
-      <p class="text-gray-600">© 2025 Nityaprotocol. All rights reserved.</p>
+      <p class="text-gray-600">© 2025 Nityaprotocol. All rights reserved.Version 0.0.19</p>
     </div>
   </footer>
 
