@@ -5,6 +5,17 @@ const DEPLOY_API_KEY = 'deploy-api-key-123';
 let currentEditPoolId = null;
 let poolDataMap = new Map();
 
+export function resetPoolsOnDisconnect() {
+  const poolsGrid = document.getElementById('pools-grid');
+  poolsGrid.innerHTML = '<div class="col-span-full text-center py-12 text-gray-600"><p class="text-lg font-semibold">No wallet connected</p><p class="text-gray-500">Please connect your wallet to view or manage pools.</p></div>';
+  poolDataMap.clear();
+  currentEditPoolId = null;
+  document.getElementById('total-pools').textContent = '0';
+  document.getElementById('active-pools').textContent = '0';
+  document.getElementById('pool-details').classList.add('hidden');
+  document.getElementById('no-pool-selected').classList.remove('hidden');
+}
+
 export async function fetchSupportLink() {
   try {
     const response = await fetch(`${document.getElementById('server-url').value}/support-link`, {
@@ -22,7 +33,7 @@ export async function fetchSupportLink() {
 
 export async function createPool(event) {
   event.preventDefault();
-  const poolPassword = document.getElementById('pool-password').value;
+  const poolPassword = document.getElementById('pool-password bradford').value;
   const confirmPassword = document.getElementById('pool-password-confirm').value;
   if (!poolPassword) {
     showToast('Pool password is required.');
@@ -129,7 +140,6 @@ export async function editPoolSubmit(event) {
     document.getElementById('whitelist-preview-edit').innerHTML = '';
     loadPools();
     showToast('Pool updated successfully!', 'success');
-    // Reload pool details to simulate Pool Actions button click
     reloadPoolDetails(currentEditPoolId);
   } catch (error) {
     showToast('Error updating pool: ' + error.message);
@@ -282,7 +292,6 @@ export async function revokeAccess() {
       showToast('Server URL is missing.');
       return;
     }
-    // Step 1: Revoke access
     const revokeUrl = new URL(`${serverUrl}/pool/${encodeURIComponent(currentEditPoolId)}/revoke`);
     revokeUrl.searchParams.append('password', password);
     revokeUrl.searchParams.append('creatorAddress', walletAddress);
@@ -295,7 +304,6 @@ export async function revokeAccess() {
     if (!revokeResponse.ok) {
       throw new Error(`${revokeResult.error || 'Failed to revoke access'} (${revokeResult.code || 'UNKNOWN_ERROR'})`);
     }
-    // Step 2: Fetch current pool data to get the latest whitelist
     const poolResponse = await fetch(`${serverUrl}/pools?creatorAddress=${encodeURIComponent(walletAddress)}`, {
       headers: { 'X-API-Key': DEPLOY_API_KEY }
     });
@@ -308,7 +316,6 @@ export async function revokeAccess() {
     if (!pool) {
       throw new Error('Pool data not found after revoking access.');
     }
-    // Step 3: Update whitelist by removing the revoked address
     const updatedWhitelist = pool.whitelist.filter(addr => addr !== walletAddressInput);
     const updates = { whitelist: updatedWhitelist };
     const editUrl = new URL(`${serverUrl}/pool/${encodeURIComponent(currentEditPoolId)}/edit`);
@@ -323,9 +330,7 @@ export async function revokeAccess() {
     if (!editResponse.ok) {
       throw new Error(`${editResult.error || 'Failed to update whitelist'} (${editResult.code || 'UNKNOWN_ERROR'})`);
     }
-    // Step 4: Update local poolDataMap
     poolDataMap.set(currentEditPoolId, { ...pool, whitelist: updatedWhitelist });
-    // Step 5: Clear input and refresh UI
     document.getElementById('revoke-address').value = '';
     loadPools();
     reloadPoolDetails(currentEditPoolId);
@@ -482,13 +487,18 @@ export function editPool(poolId) {
 }
 
 export async function reloadPoolDetails(poolId) {
+  if (!walletAddress) {
+    showToast('Wallet is disconnected. Please connect a wallet to view pool details.');
+    document.getElementById('pool-details').classList.add('hidden');
+    document.getElementById('no-pool-selected').classList.remove('hidden');
+    return;
+  }
   try {
     const serverUrl = document.getElementById('server-url').value;
     if (!serverUrl) {
       showToast('Server URL is missing.');
       return;
     }
-    // Fetch fresh pool data from the server
     const poolsResponse = await fetch(`${serverUrl}/pools?creatorAddress=${encodeURIComponent(walletAddress)}`, {
       headers: { 'X-API-Key': DEPLOY_API_KEY }
     });
@@ -503,7 +513,6 @@ export async function reloadPoolDetails(poolId) {
       return;
     }
     currentEditPoolId = poolId;
-    // Fetch the latest pool balance
     const balanceResponse = await fetch(`${serverUrl}/pool/${encodeURIComponent(poolId)}/balance?creatorAddress=${encodeURIComponent(walletAddress)}`, {
       headers: { 'X-API-Key': DEPLOY_API_KEY }
     });
@@ -514,13 +523,9 @@ export async function reloadPoolDetails(poolId) {
     const isEnded = now > endTime;
     const statusText = isEnded ? 'Ended' : 'Active';
     const statusColor = isEnded ? 'text-red-600' : 'text-green-600';
-
-    // Clear previous content to ensure fresh render
     document.getElementById('pool-details-content').innerHTML = '';
     document.getElementById('pool-details').classList.add('hidden');
     document.getElementById('no-pool-selected').classList.add('hidden');
-
-    // Populate pool-details-content with pool info and actions
     const detailsContent = `
       <div class="detail-section">
         <div class="detail-title">POOL INFORMATION</div>
@@ -583,11 +588,9 @@ export async function reloadPoolDetails(poolId) {
         </div>
       </div>
     `;
-    // Update pool-details-content and toggle visibility
     document.getElementById('pool-details-content').innerHTML = detailsContent;
     document.getElementById('pool-details').classList.remove('hidden');
     document.getElementById('no-pool-selected').classList.add('hidden');
-    // Attach event listeners to buttons
     const sponsorButton = document.getElementById(`sponsor-btn-${poolId}`);
     if (sponsorButton) {
       sponsorButton.addEventListener('click', () => sponsorCredits(poolId));
@@ -600,6 +603,12 @@ export async function reloadPoolDetails(poolId) {
 }
 
 export async function viewDetails(poolId) {
+  if (!walletAddress) {
+    showToast('Wallet is disconnected. Please connect a wallet to view pool details.');
+    document.getElementById('pool-details').classList.add('hidden');
+    document.getElementById('no-pool-selected').classList.remove('hidden');
+    return;
+  }
   const pool = poolDataMap.get(poolId);
   if (!pool) {
     showToast('Pool data not found.');
@@ -622,13 +631,9 @@ export async function viewDetails(poolId) {
     const isEnded = now > endTime;
     const statusText = isEnded ? 'Ended' : 'Active';
     const statusColor = isEnded ? 'text-red-600' : 'text-green-600';
-
-    // Clear previous content to ensure fresh render
     document.getElementById('pool-details-content').innerHTML = '';
     document.getElementById('pool-details').classList.add('hidden');
     document.getElementById('no-pool-selected').classList.add('hidden');
-
-    // Populate pool-details-content with pool info and actions
     const detailsContent = `
       <div class="detail-section">
         <div class="detail-title">POOL INFORMATION</div>
@@ -691,11 +696,9 @@ export async function viewDetails(poolId) {
         </div>
       </div>
     `;
-    // Update pool-details-content and toggle visibility
     document.getElementById('pool-details-content').innerHTML = detailsContent;
     document.getElementById('pool-details').classList.remove('hidden');
     document.getElementById('no-pool-selected').classList.add('hidden');
-    // Attach event listeners to buttons
     const sponsorButton = document.getElementById(`sponsor-btn-${poolId}`);
     if (sponsorButton) {
       sponsorButton.addEventListener('click', () => sponsorCredits(poolId));
@@ -710,6 +713,15 @@ export async function viewDetails(poolId) {
 export async function loadPools() {
   const poolsGrid = document.getElementById('pools-grid');
   poolsGrid.classList.add('loading');
+
+  // If no wallet is connected, clear the UI immediately
+  if (!walletAddress) {
+    console.log('No wallet connected, clearing pools UI');
+    resetPoolsOnDisconnect();
+    poolsGrid.classList.remove('loading');
+    return;
+  }
+
   try {
     const serverUrl = document.getElementById('server-url').value;
     if (!serverUrl) {
@@ -786,7 +798,6 @@ export async function loadPools() {
   }
 }
 
-// Initialize event listeners for static buttons
 function initializeModalListeners() {
   const createPoolBtn = document.getElementById('create-pool-btn');
   const closeCreateModal = document.getElementById('close-create-modal');
@@ -843,5 +854,14 @@ function initializeModalListeners() {
   }
 }
 
-// Run initialization when the DOM fully loaded
-document.addEventListener('DOMContentLoaded', initializeModalListeners);
+// Handle wallet disconnection event
+document.addEventListener('walletDisconnected', () => {
+  console.log('walletDisconnected event caught, refreshing pools');
+  loadPools();
+});
+
+// Initialize on page load
+document.addEventListener('DOMContentLoaded', () => {
+  initializeModalListeners();
+  loadPools();
+});
