@@ -27,6 +27,8 @@
     }
   </script>
   <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="src/new-styles.css">
+  <link rel="stylesheet" href="src/wallet-modal.css">
   <style>
     * {
       font-family: 'JetBrains Mono', monospace;
@@ -59,11 +61,10 @@
       left: 0;
       border-radius: 0 100% 0 0;
     }
-    
     header {
-      background: #ffffff;
-      border-bottom: 1px solid #000000;
-    }
+  background: #ffffff;
+  border-bottom: 1px solid #000000;
+}
     
     .toast-container {
       position: fixed;
@@ -107,30 +108,18 @@
       background: #333333;
     }
     
-    .waitlist-link {
-      color: #000000;
-      font-size: 14px;
-      font-weight: 500;
-      cursor: pointer;
-      transition: all 0.2s;
-    }
-    
-    .waitlist-link:hover {
-      text-decoration: underline;
-    }
-    
     .feature-card {
-      padding: 15px;
-      transition: all 0.2s;
-      text-align: center;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-    }
+  padding: 15px;
+  transition: all 0.2s;
+  text-align: center; /* Center text and inline elements */
+  display: flex;
+  flex-direction: column;
+  align-items: center; /* Center items horizontally in flex container */
+  justify-content: center; /* Optional: Center items vertically */
+}
     
     .feature-card:hover {
-      background: #f5f5f6;
+      background: #f5f5f5;
     }
     
     .pool-card {
@@ -141,7 +130,11 @@
     }
     
     .pool-card:hover {
-      background: #f5f5f6;
+      background: #f5f5f5;
+    }
+    
+    header {
+      background: #ffffff;
     }
     
     section {
@@ -154,7 +147,7 @@
     }
     
     footer {
-      border-top: 2px solid #000000;
+      border-top: 1px solid #000000;
     }
 
     .logo-style {
@@ -272,61 +265,32 @@
       color: #1d4ed8;
     }
 
-    h1.inline-flex {
-      display: inline-flex;
-      align-items: flex-end;
-      line-height: 1;
-    }
+    #contact-us-btn {
+  background: none;
+  border: none;
+  padding: 0;
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: #000000;
+  cursor: pointer;
+  transition: text-decoration 0.2s;
+  font-family: 'JetBrains Mono', monospace;
+}
 
-    h1.inline-flex span {
-      font-size: 0.875rem;
-      margin-left: 0.25rem;
-      color: #000000;
-    }
+#contact-us-btn:hover {
+  text-decoration: underline;
+}
+h1.inline-flex {
+  display: inline-flex;
+  align-items: flex-end;
+  line-height: 1;
+}
 
-    .waitlist-form {
-      background: #ffffff;
-      border: 2px solid #000000;
-      padding: 32px;
-      border-radius: 8px;
-      max-width: 500px;
-      margin: 0 auto;
-      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
-    }
-
-    .waitlist-form input {
-      width: 100%;
-      padding: 12px;
-      margin-bottom: 16px;
-      border: 2px solid #000000;
-      border-radius: 4px;
-      font-family: 'JetBrains Mono', monospace;
-      font-size: 14px;
-      background: #f5f5f6;
-      color: #000000;
-      outline: none;
-      transition: border-color 0.2s;
-    }
-
-    .waitlist-form input:focus {
-      border-color: #2563eb;
-    }
-
-    .waitlist-form label {
-      display: block;
-      font-size: 14px;
-      font-weight: 600;
-      margin-bottom: 8px;
-      color: #000000;
-    }
-
-    .waitlist-form .error-text {
-      color: #ef4444;
-      font-size: 12px;
-      margin-top: -12px;
-      margin-bottom: 12px;
-      display: none;
-    }
+h1.inline-flex span {
+  font-size: 0.875rem;
+  margin-left: 0.25rem;
+  color: #000000;
+}
   </style>
 </head>
 <body>
@@ -342,31 +306,31 @@
           <img src="logo.png" alt="Nityaprotocol Logo" class="logo-style mr-3">
           <h1 class="text-xl font-bold">Nityaprotocol</h1>
         </div>
-        <div class="flex items-center">
-          <span id="join-waitlist-btn" class="waitlist-link">Join Now</span>
-        </div>
+        <button id="contact-us-btn" class="btn-primary px-6 py-2 text-sm font-semibold">
+         Mail Us
+        </button>
       </div>
     </div>
   </header>
 
   <section>
-    <div class="container text-center px-4 sm:px-6 lg:px-8">
-      <h1 class="text-4xl md:text-6xl font-bold mb-6 inline-flex items-end">
-        Nitya Pools<span class="text-sm ml-1">.beta</span>
-      </h1>
-      <p class="text-xl text-gray-600 mb-8 max-w-2xl mx-auto">
-        Creating and managing sponsored credit pools for the Arweave ecosystem made easy.
-      </p>
-      <div class="flex justify-center gap-6">
-        <button id="get-started-btn" class="btn-primary px-8 py-4 text-lg font-semibold">
-          Get Started
-        </button>
-        <button id="setup-guide-btn" class="btn-primary px-8 py-4 text-lg font-semibold">
-          Setup Guide
-        </button>
-      </div>
+  <div class="container text-center px-4 sm:px-6 lg:px-8">
+    <h1 class="text-4xl md:text-6xl font-bold mb-6 inline-flex items-end">
+      Nitya Pools<span class="text-sm ml-1">.beta</span>
+    </h1>
+    <p class="text-xl text-gray-600 mb-8 max-w-2xl mx-auto">
+      Creating and managing sponsored credit pools for the Arweave ecosystem made easy.
+    </p>
+    <div class="flex justify-center gap-6">
+      <button id="get-started-btn" class="btn-primary px-8 py-4 text-lg font-semibold">
+        Get Started
+      </button>
+      <button id="setup-guide-btn" class="btn-primary px-8 py-4 text-lg font-semibold">
+        Setup Guide
+      </button>
     </div>
-  </section>
+  </div>
+</section>
 
   <div id="setup-guide-modal" class="modal">
     <div class="modal-content">
@@ -393,7 +357,7 @@
             <li><strong>Password</strong>: A secure password for pool management.</li>
             <li><strong>Start Time</strong> and <strong>End Time</strong>: The active duration of the pool.</li>
             <li><strong>Usage Cap</strong>: The maximum credit limit per wallet for the pool.</li>
-            <li><strong>Whitelisted Addresses</strong>: Wallet Addresses allowed to use the pool.</li>
+            <li><strong>Whitelisted Addresses</strong>:Wallet Addresses allowed to use the pool.</li>
             <li><strong>Sponsor Info</strong>: Additional sponsor details.</li>
           </ul>
         </li>
@@ -405,8 +369,8 @@
         <li>Click <strong>Pool Actions</strong> on a pool card to:
           <ul>
             <li>View pool information, status, balance, and whitelisted addresses.</li>
-            <li>Use <strong>Sponsor Credits</strong> (requires password) to sponsor all the addresses in the whitelist.</li>
-            <li>Enter an address to <strong>Revoke Access</strong> (requires password).</li>
+            <li>Use <strong>Sponsor Credits</strong> (requires password).to sponsor all the addresses in the whitelist</li>
+            <li>Enter an address to <strong>Revoke Access</strong>.(requires password)</li>
             <li>Click <strong>Download Wallet</strong> to save the pool’s wallet key file.</li>
             <li>Click <strong>Delete Pool</strong> to permanently remove the pool (requires confirmation and password; ensure key files are downloaded first).</li>
           </ul>
@@ -432,57 +396,51 @@
     </div>
   </div>
 
-  <div id="waitlist-modal" class="modal">
+  <div id="contact-us-modal" class="modal">
     <div class="modal-content">
-      <button id="waitlist-modal-close" class="modal-close">×</button>
-      <h1>Join the Nitya Pools Waitlist</h1>
-      <p class="mb-6">Enter your email to get early access and stay updated on our beta release!</p>
-      <div class="waitlist-form">
-        <div>
-          <label for="waitlist-email">Email</label>
-          <input type="email" id="waitlist-email" placeholder="Enter your email" required>
-          <p id="waitlist-email-error" class="error-text">Please enter a valid email address.</p>
-        </div>
-        <button id="waitlist-submit-btn" class="btn-primary w-full mt-4">Join Waitlist</button>
-      </div>
+      <button id="contact-modal-close" class="modal-close">×</button>
+      <p class="mb-6">For any inquiries or support mail us at.</p>
+      <p><strong>Email:</strong> <a href="mailto:support@nityaprotocol.io">nityaprotocol@gmail.com</a></p>
     </div>
   </div>
 
   <section class="bg-gray-50">
-    <div class="container px-4 sm:px-6 lg:px-8">
-      <h2 class="text-3xl font-bold text-center mb-12">Features</h2>
-      <div class="grid md:grid-cols-3 gap-8">
-        <div class="feature-card p-6 rounded-2xl">
-          <div class="w-12 h-12 bg-gray-100 rounded-lg flex items-center justify-center mb-4">
-            <svg class="w-6 h-6 text-black" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 12h14M5 12a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v4a2 2 0 01-2 2M5 12a2 2 0 00-2 2v4a2 2 0 002 2h14a2 2 0 002-2v-4a2 2 0 00-2-2"></path>
-            </svg>
-          </div>
-          <h3 class="text-xl font-semibold mb-3">Pool Management</h3>
-          <p class="text-gray-600">Create and manage multiple sponsor pools with custom configurations and access controls.</p>
+  <div class="container px-4 sm:px-6 lg:px-8">
+    <h2 class="text-3xl font-bold text-center mb-12">Features</h2>
+    <div class="grid md:grid-cols-3 gap-8">
+      <!-- Pool Management -->
+      <div class="feature-card p-6 rounded-2xl">
+        <div class="w-12 h-12 bg-gray-100 rounded-lg flex items-center justify-center mb-4">
+          <svg class="w-6 h-6 text-black" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 12h14M5 12a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v4a2 2 0 01-2 2M5 12a2 2 0 00-2 2v4a2 2 0 002 2h14a2 2 0 002-2v-4a2 2 0 00-2-2"></path>
+          </svg>
         </div>
-        <div class="feature-card p-6 rounded-2xl">
-          <div class="w-12 h-12 bg-gray-100 rounded-lg flex items-center justify-center mb-4">
-            <svg class="w-6 h-6 text-black" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"></path>
-            </svg>
-          </div>
-          <h3 class="text-xl font-semibold mb-3">Access Control</h3>
-          <p class="text-gray-600">Whitelist specific addresses and manage user access with granular permission controls.</p>
+        <h3 class="text-xl font-semibold mb-3">Pool Management</h3>
+        <p class="text-gray-600">Create and manage multiple sponsor pools with custom configurations and access controls.</p>
+      </div>
+      <!-- Access Control (Unchanged, as you confirmed it's correct) -->
+      <div class="feature-card p-6 rounded-2xl">
+        <div class="w-12 h-12 bg-gray-100 rounded-lg flex items-center justify-center mb-4">
+          <svg class="w-6 h-6 text-black" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"></path>
+          </svg>
         </div>
-        <div class="feature-card p-6 rounded-2xl">
-          <div class="w-12 h-12 bg-gray-100 rounded-lg flex items-center justify-center mb-4">
-            <svg class="w-6 h-6 text-black" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 8v8m-4-5v5m-4-2v2m-2 4h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
-            </svg>
-          </div>
-          <h3 class="text-xl font-semibold mb-3">Real-time Analytics</h3>
-          <p class="text-gray-600">Monitor pool usage, track spending, and get detailed insights into your pool activities.</p>
+        <h3 class="text-xl font-semibold mb-3">Access Control</h3>
+        <p class="text-gray-600">Whitelist specific addresses and manage user access with granular permission controls.</p>
+      </div>
+      <!-- Real-time Analytics -->
+      <div class="feature-card p-6 rounded-2xl">
+        <div class="w-12 h-12 bg-gray-100 rounded-lg flex items-center justify-center mb-4">
+          <svg class="w-6 h-6 text-black" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 8v8m-4-5v5m-4-2v2m-2 4h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
+          </svg>
         </div>
+        <h3 class="text-xl font-semibold mb-3">Real-time Analytics</h3>
+        <p class="text-gray-600">Monitor pool usage, track spending, and get detailed insights into your pool activities.</p>
       </div>
     </div>
-  </section>
-
+  </div>
+</section>
   <section>
     <div class="container text-center px-4 sm:px-6 lg:px-8">
       <h2 class="text-3xl font-bold mb-8">Resources & Support</h2>
@@ -520,22 +478,15 @@
 
   <footer class="bg-gray-50 py-8 px-4 sm:px-6 lg:px-8">
     <div class="container text-center">
-      <p class="text-gray-600">© 2025 Nityaprotocol. All rights reserved. Version 0.0.22</p>
+      <p class="text-gray-600">© 2025 Nityaprotocol. All rights reserved. Version 0.0.23</p>
     </div>
   </footer>
 
   <script>
-    // Toast notification function
-    function showToast(message, type = 'success') {
-      const toastContainer = document.getElementById('toast-container');
-      const toast = document.createElement('div');
-      toast.className = `toast ${type}`;
-      toast.textContent = message;
-      toastContainer.appendChild(toast);
-      setTimeout(() => {
-        toast.remove();
-      }, 3000);
-    }
+    // Get started button functionality
+    document.getElementById('get-started-btn').addEventListener('click', () => {
+      window.location.href = 'dashboard.html';
+    });
 
     // Setup guide modal functionality
     const setupGuideBtn = document.getElementById('setup-guide-btn');
@@ -556,108 +507,22 @@
       }
     });
 
-    // Waitlist modal functionality
-    const joinWaitlistBtn = document.getElementById('join-waitlist-btn');
-    const getStartedBtn = document.getElementById('get-started-btn');
-    const waitlistModal = document.getElementById('waitlist-modal');
-    const waitlistModalClose = document.getElementById('waitlist-modal-close');
-    const waitlistSubmitBtn = document.getElementById('waitlist-submit-btn');
-    const waitlistEmailInput = document.getElementById('waitlist-email');
-    const waitlistEmailError = document.getElementById('waitlist-email-error');
+    // Contact us modal functionality
+    const contactUsBtn = document.getElementById('contact-us-btn');
+    const contactUsModal = document.getElementById('contact-us-modal');
+    const contactModalClose = document.getElementById('contact-modal-close');
 
-    async function handleWaitlistSubmit(email) {
-      waitlistEmailError.style.display = 'none';
-
-      if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
-        waitlistEmailError.style.display = 'block';
-        showToast('Please enter a valid email address.', 'error');
-        return false;
-      }
-
-      try {
-        const response = await fetch('http://localhost:3000/api/waitlist', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ email })
-        });
-        const data = await response.json();
-
-        if (response.ok) {
-          showToast(data.message, 'success');
-          waitlistEmailInput.value = '';
-          waitlistModal.style.display = 'none';
-          return true;
-        } else {
-          showToast(data.error, 'error');
-          return false;
-        }
-      } catch (error) {
-        showToast('Failed to connect to server.', 'error');
-        return false;
-      }
-    }
-
-    async function checkWaitlistStatus(email) {
-      if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
-        return false;
-      }
-
-      try {
-        const response = await fetch('http://localhost:3000/api/check-waitlist', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ email })
-        });
-        const data = await response.json();
-
-        if (response.ok && data.isInWaitlist) {
-          return true;
-        }
-        return false;
-      } catch (error) {
-        showToast('Failed to verify waitlist status.', 'error');
-        return false;
-      }
-    }
-
-    joinWaitlistBtn.addEventListener('click', () => {
-      waitlistModal.style.display = 'flex';
+    contactUsBtn.addEventListener('click', () => {
+      contactUsModal.style.display = 'flex';
     });
 
-    getStartedBtn.addEventListener('click', async () => {
-      const email = prompt('Please enter your email address:');
-      if (!email) {
-        showToast('Email is required to proceed.', 'error');
-        return;
-      }
-
-      const isInWaitlist = await checkWaitlistStatus(email);
-      if (isInWaitlist) {
-        window.location.href = 'dashboard.html';
-      } else {
-        waitlistEmailInput.value = email;
-        waitlistModal.style.display = 'flex';
-      }
+    contactModalClose.addEventListener('click', () => {
+      contactUsModal.style.display = 'none';
     });
 
-    waitlistModalClose.addEventListener('click', () => {
-      waitlistModal.style.display = 'none';
-    });
-
-    waitlistModal.addEventListener('click', (e) => {
-      if (e.target === waitlistModal) {
-        waitlistModal.style.display = 'none';
-      }
-    });
-
-    waitlistSubmitBtn.addEventListener('click', async () => {
-      const email = waitlistEmailInput.value;
-      const isJoined = await handleWaitlistSubmit(email);
-      if (isJoined) {
-        const isInWaitlist = await checkWaitlistStatus(email);
-        if (isInWaitlist) {
-          window.location.href = 'dashboard.html';
-        }
+    contactUsModal.addEventListener('click', (e) => {
+      if (e.target === contactUsModal) {
+        contactUsModal.style.display = 'none';
       }
     });
   </script>
