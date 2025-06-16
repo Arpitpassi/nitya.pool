@@ -604,9 +604,10 @@ export function openTopUpModal(poolId) {
           <label for="topup-amount">AR Amount:</label>
           <input type="number" id="topup-amount" step="0.000000000001" min="0" required>
           <button type="button" id="use-max-ar">Use Max AR</button>
+          <p id="estimated-credits" style="margin-top: 5px; font-size: 0.9em; color: #555;">Estimated Turbo Credits: 0</p>
         </div>
         <div class="modal-actions">
-          <button type="submit" class="btn-primary">Submit</button>
+          <button type="submit" class="btn-primary" id="topup-submit">Submit</button>
           <button type="button" id="cancel-topup" class="btn-secondary">Cancel</button>
         </div>
       </form>
@@ -619,16 +620,86 @@ export function openTopUpModal(poolId) {
   const passwordInput = modal.querySelector('#topup-password');
   const amountInput = modal.querySelector('#topup-amount');
   const useMaxArButton = modal.querySelector('#use-max-ar');
+  const submitButton = modal.querySelector('#topup-submit');
   const cancelTopUpButton = modal.querySelector('#cancel-topup');
   const closeTopUpButton = modal.querySelector('#close-topup-modal');
+  const estimatedCredits = modal.querySelector('#estimated-credits');
 
   // Validate elements
-  if (!topUpForm || !passwordInput || !amountInput || !useMaxArButton || !cancelTopUpButton || !closeTopUpButton) {
+  if (!topUpForm || !passwordInput || !amountInput || !useMaxArButton || !submitButton || !cancelTopUpButton || !closeTopUpButton || !estimatedCredits) {
     console.error('Top-up modal elements not found after creation');
     showToast('Failed to initialize top-up modal');
     modal.remove();
     return;
   }
+
+  // Function to show loading screen
+  const showLoadingScreen = () => {
+    const loadingOverlay = document.createElement('div');
+    loadingOverlay.id = 'loading-overlay';
+    loadingOverlay.style = `
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0, 0, 0, 0.5);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      z-index: 9999;
+    `;
+    loadingOverlay.innerHTML = `
+      <div style="
+        background: white;
+        padding: 20px;
+        border-radius: 8px;
+        text-align: center;
+      ">
+        <div style="
+          border: 4px solid #f3f3f3;
+          border-top: 4px solid #3498db;
+          border-radius: 50%;
+          width: 40px;
+          height: 40px;
+          animation: spin 1s linear infinite;
+          margin: 0 auto;
+        "></div>
+        <p style="margin-top: 10px;">Processing Top-Up...</p>
+      </div>
+    `;
+    document.body.appendChild(loadingOverlay);
+    // Add CSS animation for spinner
+    const styleSheet = document.createElement('style');
+    styleSheet.innerHTML = `
+      @keyframes spin {
+        0% { transform: rotate(0deg); }
+        100% { transform: rotate(360deg); }
+      }
+    `;
+    document.head.appendChild(styleSheet);
+  };
+
+  // Function to hide loading screen
+  const hideLoadingScreen = () => {
+    const loadingOverlay = document.getElementById('loading-overlay');
+    if (loadingOverlay) loadingOverlay.remove();
+  };
+
+  // Function to update estimated Turbo Credits
+  const updateEstimatedCredits = () => {
+    const amount = parseFloat(amountInput.value);
+    if (!isNaN(amount) && amount > 0) {
+      const fee = 0.234; // 23.4% fee from Turbo Topup
+      const turboCredits = amount * (1 - fee);
+      estimatedCredits.textContent = `Estimated Turbo Credits: ${turboCredits.toFixed(6)}`;
+    } else {
+      estimatedCredits.textContent = 'Estimated Turbo Credits: 0';
+    }
+  };
+
+  // Add event listener for amount input
+  amountInput.addEventListener('input', updateEstimatedCredits);
 
   // Add event listener for "Use Max AR"
   useMaxArButton.addEventListener('click', async () => {
@@ -638,9 +709,11 @@ export function openTopUpModal(poolId) {
       return;
     }
     try {
+      showLoadingScreen();
       const serverUrl = document.getElementById('server-url').value;
       if (!serverUrl) {
         showToast('Server URL is missing.');
+        hideLoadingScreen();
         return;
       }
       const url = new URL(`${serverUrl}/pool/${encodeURIComponent(poolId)}/ar-balance`);
@@ -650,12 +723,15 @@ export function openTopUpModal(poolId) {
         headers: { 'X-API-Key': DEPLOY_API_KEY }
       });
       const result = await response.json();
+      hideLoadingScreen();
       if (!response.ok) {
-        throw new Error(result.error || 'Failed to fetch AR balance');
+        throw new Error(`${result.error || 'Failed to fetch AR balance'} (${result.code || 'UNKNOWN_ERROR'})`);
       }
       amountInput.value = result.balance;
+      amountInput.dispatchEvent(new Event('input')); // Trigger credits update
     } catch (error) {
-      showToast('Error fetching AR balance: ' + error.message);
+      hideLoadingScreen();
+      showToast(`Error fetching AR balance: ${error.message}`);
     }
   });
 
@@ -673,9 +749,15 @@ export function openTopUpModal(poolId) {
       return;
     }
     try {
+      showLoadingScreen();
+      submitButton.disabled = true;
+      submitButton.textContent = 'Submitting...';
       const serverUrl = document.getElementById('server-url').value;
       if (!serverUrl) {
         showToast('Server URL is missing.');
+        hideLoadingScreen();
+        submitButton.disabled = false;
+        submitButton.textContent = 'Submit';
         return;
       }
       const url = new URL(`${serverUrl}/pool/${encodeURIComponent(poolId)}/topup`);
@@ -686,14 +768,20 @@ export function openTopUpModal(poolId) {
         body: JSON.stringify({ password, amount })
       });
       const result = await response.json();
+      hideLoadingScreen();
+      submitButton.disabled = false;
+      submitButton.textContent = 'Submit';
       if (!response.ok) {
-        throw new Error(result.error || 'Failed to top up pool');
+        throw new Error(`${result.error || 'Failed to top up pool'} (${result.code || 'UNKNOWN_ERROR'})`);
       }
       modal.remove();
-      showToast('Pool topped up successfully!', 'success');
+      showToast(`Pool topped up successfully! Transaction ID: ${result.transactionId}`, 'success');
       reloadPoolDetails(poolId);
     } catch (error) {
-      showToast('Error topping up pool: ' + error.message);
+      hideLoadingScreen();
+      submitButton.disabled = false;
+      submitButton.textContent = 'Submit';
+      showToast(`Error topping up pool: ${error.message}`, 'error');
     }
   });
 
