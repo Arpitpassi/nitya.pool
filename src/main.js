@@ -1,6 +1,6 @@
 import { updateWhitelistPreview, handleWhitelistFile } from './dom.js';
 import { showWalletChoiceModal, connectWithStrategy, disconnectWallet, browserWalletStrategy, beaconStrategy } from './wallet.js';
-import { createPool, editPoolSubmit, revokeAccess, shareCredits, downloadWallet, deletePoolConfirm, editPool, viewDetails } from './pool.js';
+import { createPool, editPoolSubmit, revokeAccess, shareCredits, downloadWallet, deletePoolConfirm, editPool, viewDetails, openTopUpModal } from './pool.js';
 
 // Expose global functions
 window.revokeAccess = revokeAccess;
@@ -9,6 +9,7 @@ window.downloadWallet = downloadWallet;
 window.deletePoolConfirm = deletePoolConfirm;
 window.editPool = editPool;
 window.viewDetails = viewDetails;
+window.openTopUpModal = openTopUpModal;
 
 // Prevent duplicate event listeners
 let eventListenersAttached = false;
@@ -84,7 +85,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
   const supportBtn = document.getElementById('support-btn');
   if (supportBtn) {
-    supportBtn.addEventListener('click');
+    supportBtn.addEventListener('click', fetchSupportLink);
   }
 
   const createPoolBtn = document.getElementById('create-pool-btn');
