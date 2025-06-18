@@ -609,6 +609,10 @@
                 <div class="action-title">DELETE POOL</div>
                 <button onclick="deletePoolConfirm()" class="action-button btn-delete">DELETE POOL</button>
               </div>
+              <div class="action-section">
+                <div class="action-title">TOP UP POOL</div>
+                <button onclick="openTopUpModal('${currentEditPoolId}')" class="action-button btn-primary">TOP UP</button>
+              </div>
             </div>
           </div>
         </div>
@@ -669,7 +673,7 @@
         </div>
         
         <div class="form-group">
-          <label class="form-label">MAX CREDITS PER WALLET(USAGE CAP)</label>
+          <label class="form-label">MAX CREDITS PER WALLET (USAGE CAP)</label>
           <input type="number" id="usage-cap" step="0.000000000001" min="0" class="form-input" required>
         </div>
         
@@ -740,8 +744,6 @@
       </form>
     </div>
   </div>
-
-  
 
   <script type="module" src="src/main.js"></script>
 </body>
