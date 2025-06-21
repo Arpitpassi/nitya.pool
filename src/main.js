@@ -1,6 +1,6 @@
 import { updateWhitelistPreview, handleWhitelistFile } from './dom.js';
 import { showWalletChoiceModal, connectWithStrategy, disconnectWallet, browserWalletStrategy, beaconStrategy } from './wallet.js';
-import { createPool, editPoolSubmit, revokeAccess, shareCredits, downloadWallet, deletePoolConfirm, editPool, viewDetails, openTopUpModal } from './pool.js';
+import { createPool, editPoolSubmit, revokeAccess, shareCredits, downloadWallet, deletePoolConfirm, editPool, viewDetails, openTopUpModal } from './pools.js';
 
 // Expose global functions
 window.revokeAccess = revokeAccess;

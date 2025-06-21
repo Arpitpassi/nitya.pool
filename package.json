@@ -16,6 +16,8 @@
   "dependencies": {
     "@arweave-wallet-kit/browser-wallet-strategy": "^0.1.1",
     "@arweave-wallet-kit/styles": "^0.1.1",
-    "@vela-ventures/aosync-strategy": "^1.0.12"
+    "@vela-ventures/aosync-strategy": "^1.0.12",
+    "react": "^19.1.0",
+    "react-dom": "^19.1.0"
   }
 }

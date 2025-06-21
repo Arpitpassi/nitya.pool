@@ -1,5 +1,5 @@
 import { showToast } from './utils.js';
-import { loadPools } from './pool.js';
+import { loadPools } from './pools.js';
 import BrowserWalletStrategy from '@arweave-wallet-kit/browser-wallet-strategy';
 import AoSyncStrategy from '@vela-ventures/aosync-strategy';
 
